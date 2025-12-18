@@ -1,79 +1,88 @@
-// converter.worker.js - Background Logic
-importScripts('mapping.js'); // मॅपिंग फाईल लोड करणे
+// converter.worker.js - Advanced Logic Engine
+importScripts('mapping.js');
 
 self.onmessage = function(e) {
     const text = e.data.text;
     const mode = e.data.mode;
     
-    let result = "";
-    const totalLength = text.length;
+    // मोठी फाईल असल्यास ब्राउझर हँग होऊ नये म्हणून आपण ती एकाच वेळी 
+    // मेमरीमध्ये न घेता लाइन-बाय-लाइन प्रोसेस करू शकतो, 
+    // पण सध्या Worker असल्यामुळे डायरेक्ट प्रोसेस केली तरी चालेल.
     
-    // बॅच साईज (1000 अक्षरे एका वेळी - हँग टाळण्यासाठी)
-    const chunkSize = 2000; 
-
-    // मोडनुसार फंक्शन निवडणे
+    let result = "";
     if (mode === 'S2U') {
-        processS2U(text, totalLength, chunkSize);
+        result = convertShreeToUnicode(text);
     } else {
-        processU2S(text, totalLength, chunkSize);
+        result = convertUnicodeToShree(text);
     }
+
+    self.postMessage({ type: 'done', result: result });
 };
 
-// 1. Shree Lipi to Unicode Logic
-function processS2U(text, total, chunkSize) {
-    let result = "";
-    
-    for (let i = 0; i < total; i++) {
+// ----------------------------------------------------
+// लॉजिक १: श्री-लिपी ते युनिकोड (Shree -> Unicode)
+// ----------------------------------------------------
+function convertShreeToUnicode(text) {
+    let res = "";
+    let len = text.length;
+
+    for (let i = 0; i < len; i++) {
         let char = text[i];
-        
-        // --- वेलांटी लॉजिक (f + k -> कि) ---
-        if (char === 'f') { 
-            // जर 'f' आला, तर पुढचे अक्षर बघा
-            if (i + 1 < total) {
-                let nextChar = text[i + 1];
+
+        // --- रूल १: पहिली वेलांटी (f) ---
+        // श्री-लिपीत वेलांटी (f) अक्षराच्या आधी येते, युनिकोडमध्ये नंतर.
+        // लॉजिक: जर 'f' दिसला, तर तो रिझल्टमध्ये न टाकता, पुढचं अक्षर आधी घ्या, मग वेलांटी लावा.
+        if (char === 'f') {
+            if (i + 1 < len) {
+                let nextChar = text[i+1];
+                
+                // पुढचे अक्षर जर जोडाक्षर असेल (उदा. f + k + x + t = क्ति)
+                // तर हे लॉजिक आणखी कॉम्प्लेक्स होते, पण साध्या अक्षरांसाठी:
                 let mappedNext = self.shreeMap[nextChar] || nextChar;
-                result += mappedNext + "ि"; // आधी अक्षर, मग वेलांटी
-                i++; // पुढचे अक्षर वापरले, म्हणून skip करा
+                res += mappedNext + "ि"; 
+                i++; // पुढचे अक्षर वापरले, म्हणून स्किप करा
                 continue;
             }
         }
-        
-        // --- सामान्य मॅपिंग ---
-        result += self.shreeMap[char] || char;
 
-        // प्रोग्रेस रिपोर्ट करणे
-        if (i % chunkSize === 0) {
-            self.postMessage({ type: 'progress', value: (i / total) * 100 });
+        // --- रूल २: रफार (Rafar) ---
+        // श्री-लिपीच्या काही फॉन्ट्समध्ये रफार (´) अक्षराच्या नंतर येतो.
+        // युनिकोडमध्ये 'र्' + अक्षर असे लिहावे लागते. 
+        // SHREE708 मध्ये साधारणपणे रफार हा स्पेशल कॅरेक्टर म्हणून येतो.
+
+        // --- रूल ३: सामान्य मॅपिंग ---
+        let mapped = self.shreeMap[char];
+        if (mapped) {
+            res += mapped;
+        } else {
+            // जर मॅपमध्ये अक्षर सापडले नाही (उदा. English words), तर ते तसेच ठेवा.
+            res += char;
         }
     }
-    // फायनल रिझल्ट
-    self.postMessage({ type: 'done', result: result });
+    return res;
 }
 
-// 2. Unicode to Shree Lipi Logic
-function processU2S(text, total, chunkSize) {
-    let result = "";
+// ----------------------------------------------------
+// लॉजिक २: युनिकोड ते श्री-लिपी (Unicode -> Shree)
+// ----------------------------------------------------
+function convertUnicodeToShree(text) {
+    let res = "";
+    let len = text.length;
 
-    for (let i = 0; i < total; i++) {
+    for (let i = 0; i < len; i++) {
         let char = text[i];
 
-        // --- वेलांटी लॉजिक (कि -> f + k) ---
-        // जर पुढचे अक्षर 'ि' असेल
-        if (i + 1 < total && text[i + 1] === 'ि') {
+        // --- रूल १: पहिली वेलांटी (Reverse) ---
+        // युनिकोड: क + ि -> श्री: f + k
+        if (i + 1 < len && text[i+1] === 'ि') {
             let mappedChar = self.unicodeMap[char] || char;
-            result += "f" + mappedChar; // आधी 'f', मग अक्षर
-            i++; // 'ि' वापरला, म्हणून skip करा
+            res += "f" + mappedChar;
+            i++; // 'ि' वापरला म्हणून स्किप करा
             continue;
         }
 
-        // --- सामान्य मॅपिंग ---
-        result += self.unicodeMap[char] || char;
-
-        // प्रोग्रेस रिपोर्ट करणे
-        if (i % chunkSize === 0) {
-            self.postMessage({ type: 'progress', value: (i / total) * 100 });
-        }
+        let mapped = self.unicodeMap[char];
+        res += mapped ? mapped : char;
     }
-    // फायनल रिझल्ट
-    self.postMessage({ type: 'done', result: result });
+    return res;
 }
