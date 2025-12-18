@@ -1,84 +1,101 @@
-// logic.js - Main Controller
+// logic.js - Connecting everything together
+const legacyInput = document.getElementById('legacy_text');
+const unicodeOutput = document.getElementById('unicode_text');
+const convertBtn = document.getElementById('convert_btn');
+const copyBtn = document.getElementById('copy_btn');
+const statusText = document.getElementById('status');
+const fileInput = document.getElementById('file_input');
+
 let worker;
 
-function startConversion() {
-    const fileInput = document.getElementById('fileInput');
-    const mode = document.getElementById('mode').value;
-    const btn = document.getElementById('convertBtn');
-
-    if (fileInput.files.length === 0) {
-        alert("कृपया आधी फाईल निवडा!");
-        return;
-    }
-
-    const file = fileInput.files[0];
+// Worker सुरू करणे
+function initWorker() {
+    if (worker) worker.terminate();
+    worker = new Worker('js/converter.worker.js'); // वर्करची लिंक
     
-    // UI अपडेट करा
-    btn.disabled = true;
-    btn.innerText = "प्रोसेसिंग सुरू आहे...";
-    document.getElementById('progress-area').style.display = 'block';
-    updateProgress(0, "फाईल वाचत आहे...");
-
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        const textContent = e.target.result;
-
-        // जुना Worker असेल तर बंद करा
-        if (worker) worker.terminate();
-
-        // नवीन Worker सुरू करा
-        worker = new Worker('js/converter.worker.js');
-
-        // Worker ला डेटा पाठवा
-        worker.postMessage({
-            text: textContent,
-            mode: mode
-        });
-
-        // Worker कडून मेसेज स्वीकारा
-        worker.onmessage = function(e) {
-            const data = e.data;
-
-            if (data.type === 'progress') {
-                updateProgress(data.value, `कन्व्हर्ट होत आहे: ${Math.round(data.value)}%`);
-            } 
-            else if (data.type === 'done') {
-                updateProgress(100, "पूर्ण झाले! फाईल डाऊनलोड होत आहे...");
-                downloadFile(data.result, file.name, mode);
-                btn.disabled = false;
-                btn.innerText = "Convert File";
-            }
-        };
-        
-        worker.onerror = function(err) {
-            console.error(err);
-            alert("काहीतरी चूक झाली. पुन्हा प्रयत्न करा.");
-            btn.disabled = false;
-        };
+    worker.onmessage = function(e) {
+        const data = e.data;
+        if (data.type === 'progress') {
+            statusText.innerText = `Processing... ${Math.round(data.value)}%`;
+        } else if (data.type === 'done') {
+            unicodeOutput.value = data.result;
+            statusText.innerText = "Conversion Successful! ✅";
+            convertBtn.disabled = false;
+            convertBtn.innerText = "Convert Now";
+        }
     };
 
-    reader.readAsText(file);
+    worker.onerror = function(err) {
+        console.error(err);
+        statusText.innerText = "Error in processing!";
+        convertBtn.disabled = false;
+    };
 }
 
-function updateProgress(percent, text) {
-    document.getElementById('progressBar').style.width = percent + "%";
-    document.getElementById('status-text').innerText = text;
-}
+// --- फाईल अपलोड हँडलर ---
+fileInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
 
-function downloadFile(content, originalName, mode) {
-    // फाईलचे नाव ठरवणे
-    const prefix = mode === "S2U" ? "Unicode_" : "Shree_";
-    const fileName = prefix + originalName;
+    statusText.innerText = "Reading file...";
+    legacyInput.value = ""; // जुना डेटा साफ करा
 
-    // फाईल बनवणे
-    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
+    // 1. जर Word (.docx) फाईल असेल
+    if (file.name.endsWith('.docx')) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const arrayBuffer = event.target.result;
+            
+            // Mammoth वापरून मजकूर काढणे
+            mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                .then(function(result) {
+                    legacyInput.value = result.value;
+                    statusText.innerText = "Word File Loaded! Ready to Convert.";
+                })
+                .catch(function(err) {
+                    console.log(err);
+                    statusText.innerText = "Error: Word file is corrupted or protected.";
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    } 
+    // 2. जर Text (.txt) फाईल असेल
+    else {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            legacyInput.value = event.target.result;
+            statusText.innerText = "Text File Loaded! Ready to Convert.";
+        };
+        reader.readAsText(file);
+    }
+});
+
+// --- कन्व्हर्ट बटण ---
+convertBtn.addEventListener('click', () => {
+    const text = legacyInput.value;
+    if (!text) { 
+        alert("Please enter text or upload a file first!"); 
+        return; 
+    }
+
+    convertBtn.disabled = true;
+    convertBtn.innerText = "Working...";
+    statusText.innerText = "Starting conversion engine...";
     
-    // ऑटोमॅटिक क्लिक करणे
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
+    if (!worker) initWorker();
+    
+    // वर्करला डेटा पाठवा
+    worker.postMessage({ text: text });
+});
+
+// --- कॉपी बटण ---
+copyBtn.addEventListener('click', () => {
+    if (!unicodeOutput.value) return;
+    navigator.clipboard.writeText(unicodeOutput.value).then(() => {
+        statusText.innerText = "Copied to Clipboard! 📋";
+        setTimeout(() => statusText.innerText = "Done! ✅", 2000);
+    });
+});
+
+// सुरुवातीलाच वर्कर रेडी ठेवा
+initWorker();
