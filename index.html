@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree708 Professional Converter</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f2f7; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); width: 100%; max-width: 450px; text-align: center; }
+        h2 { margin-bottom: 20px; color: #007AFF; }
+        
+        .control-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        
+        select, input[type="file"] { width: 100%; padding: 12px; border: 2px solid #e5e5ea; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; }
+        
+        button { background: #007AFF; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; }
+        button:active { transform: scale(0.98); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        #progress-area { margin-top: 25px; display: none; }
+        .progress-track { background: #e5e5ea; height: 10px; border-radius: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #34c759; width: 0%; transition: width 0.3s ease; }
+        #status-text { margin-top: 10px; font-size: 14px; color: #666; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📄 Shree Converter Pro</h2>
+    
+    <div class="control-group">
+        <label>कन्व्हर्जन मोड निवडा:</label>
+        <select id="mode">
+            <option value="S2U">Shree Lipi ➔ Unicode (Mangal)</option>
+            <option value="U2S">Unicode (Mangal) ➔ Shree Lipi</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label>तुमची फाईल निवडा (.txt):</label>
+        <input type="file" id="fileInput" accept=".txt">
+    </div>
+
+    <button id="convertBtn" onclick="startConversion()">Convert File</button>
+
+    <div id="progress-area">
+        <div class="progress-track">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        <p id="status-text">तयारी करत आहे...</p>
+    </div>
+</div>
+
+<script src="js/logic.js"></script>
+</body>
+</html>
