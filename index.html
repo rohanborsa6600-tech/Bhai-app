@@ -3,55 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shree708 Professional Converter</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f2f7; padding: 20px; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); width: 100%; max-width: 450px; text-align: center; }
-        h2 { margin-bottom: 20px; color: #007AFF; }
-        
-        .control-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        
-        select, input[type="file"] { width: 100%; padding: 12px; border: 2px solid #e5e5ea; border-radius: 12px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; }
-        
-        button { background: #007AFF; color: white; border: none; padding: 16px; border-radius: 12px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+    <title>Saral/Shree Font Converter</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 
-        #progress-area { margin-top: 25px; display: none; }
-        .progress-track { background: #e5e5ea; height: 10px; border-radius: 5px; overflow: hidden; }
-        .progress-fill { height: 100%; background: #34c759; width: 0%; transition: width 0.3s ease; }
-        #status-text { margin-top: 10px; font-size: 14px; color: #666; }
+    <style>
+        /* तुमचा श्री-लिपी फॉन्ट */
+        @font-face {
+            font-family: 'LegacyFont';
+            src: url('Shreelipi_0714.TTF') format('truetype'); 
+        }
+
+        body {
+            font-family: sans-serif;
+            background-color: #f4f6f8;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        h2 { color: #0d47a1; margin-bottom: 20px; }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* फाईल अपलोड बॉक्स */
+        .upload-area {
+            border: 2px dashed #1976d2;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: #e3f2fd;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        
+        .upload-area:hover { background: #bbdefb; }
+
+        input[type="file"] { display: none; }
+
+        label.upload-label {
+            font-size: 18px;
+            color: #1565c0;
+            font-weight: bold;
+            display: block;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 18px;
+            resize: none;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        /* इनपुट आणि आऊटपुट फॉन्ट्स */
+        #legacy_text { font-family: 'LegacyFont'; color: #c62828; }
+        #unicode_text { font-family: 'Mukta', sans-serif; color: #2e7d32; }
+
+        .btn-group { display: flex; gap: 15px; }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            transition: 0.2s;
+        }
+
+        #convert_btn { background: #1976d2; }
+        #convert_btn:hover { background: #1565c0; }
+
+        #copy_btn { background: #43a047; }
+        #copy_btn:hover { background: #2e7d32; }
+        
+        #status { 
+            margin-top: 15px; 
+            color: #555; 
+            font-size: 14px; 
+            text-align: center; 
+            font-weight: bold; 
+        }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>📄 Shree Converter Pro</h2>
-    
-    <div class="control-group">
-        <label>कन्व्हर्जन मोड निवडा:</label>
-        <select id="mode">
-            <option value="S2U">Shree Lipi ➔ Unicode (Mangal)</option>
-            <option value="U2S">Unicode (Mangal) ➔ Shree Lipi</option>
-        </select>
-    </div>
+    <h2>🔄 Saral & Shree Converter Pro</h2>
 
-    <div class="control-group">
-        <label>तुमची फाईल निवडा (.txt):</label>
-        <input type="file" id="fileInput" accept=".txt">
-    </div>
-
-    <button id="convertBtn" onclick="startConversion()">Convert File</button>
-
-    <div id="progress-area">
-        <div class="progress-track">
-            <div class="progress-fill" id="progressBar"></div>
+    <div class="container">
+        
+        <div class="upload-area" onclick="document.getElementById('file_input').click()">
+            <label class="upload-label">📂 Word (.docx) किंवा Text (.txt) फाईल निवडा</label>
+            <div style="font-size: 13px; color: #666; margin-top: 8px;">(Click here to upload)</div>
+            <input type="file" id="file_input" accept=".txt, .docx" />
         </div>
-        <p id="status-text">तयारी करत आहे...</p>
-    </div>
-</div>
 
-<script src="js/logic.js"></script>
+        <textarea id="legacy_text" placeholder="किंवा तुमचा मजकूर इथे पेस्ट करा..."></textarea>
+        
+        <div class="btn-group">
+            <button id="convert_btn">Convert Now</button>
+            <button id="copy_btn">Copy Output</button>
+        </div>
+
+        <textarea id="unicode_text" readonly placeholder="इथे कन्व्हर्ट झालेला मजकूर येईल..."></textarea>
+        
+        <div id="status">Ready to start! 🚀</div>
+    </div>
+
+    <script src="js/logic.js"></script>
+
 </body>
 </html>
