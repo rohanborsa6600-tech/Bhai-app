@@ -6,34 +6,29 @@ self.onmessage = function(e) {
     let len = text.length;
 
     for (let i = 0; i < len; i++) {
-        // अक्षराचा कोड मिळवणे
         let code = text.charCodeAt(i);
-        
+
         if (mode === 'S2U') {
-            // १. पहिली वेलांटी स्वॅप (f चा कोड १०२ आहे)
-            if (code === 102) { 
-                let nextCode = text.charCodeAt(i+1);
-                let mappedNext = self.shreeMap[nextCode] || String.fromCharCode(nextCode);
-                result += mappedNext + "ि"; 
-                i++;
-                continue;
-            }
-            result += self.shreeMap[code] || text[i];
+            // Saral to Unicode (Direct Mapping)
+            // इथे वेलांटी स्वॅप (Swap) करण्याची गरज नाही
+            // कारण सरलमध्ये तुम्ही 'k' नंतर 'i' टाईप करता.
+            
+            let mapped = self.shreeMap[code];
+            result += mapped ? mapped : text[i];
         } 
         else {
-            // २. Unicode ते Shree रिव्हर्स लॉजिक
+            // Unicode to Saral
             let char = text[i];
-            if (i + 1 < len && text[i+1] === "ि") {
-                let mappedCode = self.unicodeMap[char];
-                result += "f" + (mappedCode ? String.fromCharCode(mappedCode) : char);
-                i++;
-                continue;
-            }
             let mappedCode = self.unicodeMap[char];
-            result += mappedCode ? String.fromCharCode(mappedCode) : char;
+            
+            if (mappedCode) {
+                result += mappedCode;
+            } else {
+                result += char;
+            }
         }
 
-        // प्रोग्रेस रिपोर्ट (दर ५००० अक्षरांनंतर)
+        // प्रोग्रेस अपडेट
         if (i % 5000 === 0) {
             self.postMessage({ type: 'progress', value: (i / len) * 100 });
         }
