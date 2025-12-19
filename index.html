@@ -3,133 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi Final Converter</title>
+    <title>ShreeLipi Final Converter V3</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f2f2f7; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 600px; margin: 30px auto; padding: 30px; border-radius: 20px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
-        h2 { color: #1c1c1e; margin-bottom: 5px; }
+        body { font-family: -apple-system, sans-serif; background: #e9eff5; text-align: center; padding: 20px; }
+        .card { background: white; max-width: 550px; margin: 40px auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); }
+        h2 { color: #222; margin-bottom: 5px; }
+        p { color: #666; font-size: 14px; margin-bottom: 25px; }
         
-        .upload-box {
-            border: 2px dashed #007aff; background: #eef7ff; color: #007aff;
-            padding: 40px; border-radius: 15px; font-weight: 600; cursor: pointer;
-            margin: 20px 0; display: block;
+        .upload-area {
+            border: 2px dashed #007aff; background: #f0f8ff; color: #007aff;
+            padding: 40px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            margin-bottom: 20px; display: block; transition: 0.3s;
         }
+        .upload-area:hover { background: #e0f0ff; }
         input[type="file"] { display: none; }
 
         button {
-            background: #007aff; color: white; border: none; padding: 16px; width: 100%;
-            border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
+            background: #007aff; color: white; border: none; padding: 15px; width: 100%;
+            border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,122,255,0.3);
         }
-        button:disabled { background: #d1d1d6; cursor: not-allowed; }
+        button:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
         
-        #status { margin-top: 15px; font-size: 14px; color: #333; font-weight: 500; }
-        #fileName { margin-bottom: 15px; color: #555; }
+        #status { margin-top: 20px; font-size: 15px; font-weight: 500; color: #333; }
+        #fileName { margin-bottom: 15px; color: #555; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Word to Word (Final Fixed)</h2>
-        <p>100% Working Logic</p>
+        <h2>Word to Word (Final Fix)</h2>
+        <p>Corrects {वचार, $ signs, and missing characters.</p>
 
-        <label for="fileInput" class="upload-box">
-            📄 Select Word File (.docx)
+        <label for="fileInput" class="upload-area">
+            📂 Tap to Select Word File
         </label>
         <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
         
         <div id="fileName"></div>
-
         <button id="convertBtn" disabled>Convert Now</button>
         <div id="status"></div>
     </div>
 
     <script>
-        // --- 1. FULL DATA MAPPING ---
-        const shreelipi_list = [
-            '…', 'b', 'ÿ', 'Ä', '@', 'Q´', 'u' , 'ª' , '\}' , '\[' , 'p', 'H' , '³' , 'I' , '\»' , 'J' , '½' , 'K' , 'M' , 'À' , 'N' , 'µO' , 'O' , 'µÁ' , 'Á' , 'P' , 'Q' , 'R' , '\¶S' , 'S' , '\¶T' , 'T' , 'U' , 'Ê' , 'W' , 'Ï' , 'V' , 'Ë' , 'Y', 'Ü' , 'X' , 'Z' , 'Ý' , '\’' , 'â' , 'n' , 'ß' , '\^' , 'ä' , '\~' , 'ã' , '\‘' , 'å' , '\¶' , 'a' , 'c' , 'ë', 'd' , 'ì', 'e' , 'û' , 'í' , 'f' , 'î' , 'g' , 'ñ' , 'h' , 'j' , 'ú' , 'k' , 'Ô' , 'Û' , 'Ú' , 'à' , 'Þ' , 'Q­' , 'º$' , 'Ì' , 'Ð' , 'Õ' , 'l' , 'Îm' , '\¸' , '\„' , '\ˆ' , 'œ' , 'Å' , 'Am¡' , 'Amo' , 'Am|' , 'Am' , 'A' , 'B©' , 'B' , 'C' , 'D', 'Eo', 'E' , 'F' , 'm°' , 'mo' , 'm|' , 'o' , '|' , 'm¡' , 'm¢' , '¡' , '¢' , 'm' , 'r' , 's' , 't' , 'w' , 'þ' , 'y' , '§' , '±', '•' , '¥' , '²' , 'Ñ' , '\«' , 'é' , 'ê' , '&' , '$' , '\>' , 'µ'
-        ];
+        // --- 1. MAPPING ARRAYS ---
+        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ'];
+        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','',''];
 
-        const unicode_list = [
-            'ः', "ल", "ू", "ञ्", 'ऽ', 'ट्र', '©' , '©ं' , '\{©' , '\{', '\{', "क", 'क्' , "ख", 'ख्' , "ग" , 'ग्' , 'घ' , 'च', 'च्', 'छ' , 'ज़' , 'ज' , 'ज़्' , 'ज्' , 'झ' , "ट", "ठ", 'ड़' , "ड", 'ढ़' , 'ढ' , "ण" , 'ण्' , "थ", 'थ्' , "त", 'त्' , "ध", 'ध्' , "द", "न" , 'न्' , "फ", 'फ्' , "प", 'प्' , "भ", 'भ्' , "ब", 'ब्' , "म" , 'म्' , "य", "र", "ल", 'ल्' , "व", 'व्' , "श", 'श्' , 'श्' , 'ष' , 'ष्' , "स", 'स्', "ह", 'क्ष' , 'क्ष्' , 'ज्ञ' , 'द्द', 'द्व' , 'द्य' , 'प्र', 'न्न' , 'ट्र' , 'क्त' , 'त्र' , 'द्र', 'द्ध' , 'श्र' , 'त्त' , 'क्क' , 'ल्ल' , 'ह्व' , 'श्व' , 'ट्ट' , 'औ' , 'ओ' , 'ओं' , 'आ' , 'अ' , 'ई' , 'इ' , 'उ' , 'ऊ' , 'ऐ' , 'ए' , 'ऋ' , 'ॉ' , "ो", "ों", "े", "ें", "ौ", "ौं", "ै", 'ैं' , "ा", "ी", "ी", "ीं", "ु", 'ु' , "ू", 'ं' , 'ँ' , 'ः' , 'ृ' , '्' , 'दृ' , '्र' , 'रु' , 'रू' , '।' , '' , '' , ''
-        ];
+        // --- 2. CONVERSION LOGIC ---
+        function convertText(text) {
+            if (!text) return "";
+            let res = text;
 
-        // --- 2. LOGIC (Renamed variables to avoid 'modified' error) ---
-        function convertTextLogic(inputText) {
-            if (!inputText) return "";
-            
-            let res = inputText; // Using 'res' to avoid variable conflicts
-
-            // 1. Basic Replacement
+            // Step A: Basic Replacement
             for (let i = 0; i < shreelipi_list.length; i++) {
                 if (shreelipi_list[i] && unicode_list[i]) {
                     res = res.split(shreelipi_list[i]).join(unicode_list[i]);
                 }
             }
 
-            // 2. 'i' Matra (o -> ि)
-            let pos_i = res.indexOf("o");
-            while (pos_i !== -1) {
-                if (pos_i + 1 < res.length) {
-                    let char_next = res.charAt(pos_i + 1);
-                    if(char_next !== ' ') {
-                        let to_replace = "o" + char_next;
-                        res = res.replace(to_replace, char_next + "ि");
+            // Step B: FIX for '{' (Velaanti) - This was missing!
+            // Example: {वचार -> विचार
+            let pos_curly = res.indexOf("{");
+            while (pos_curly !== -1) {
+                if (pos_curly + 1 < res.length) {
+                    let next = res.charAt(pos_curly + 1);
+                    if (next !== ' ') {
+                        // Swap: { + char -> char + ि
+                        res = res.replace("{" + next, next + "ि");
                     }
                 }
-                pos_i = res.indexOf("o", pos_i + 1);
+                pos_curly = res.indexOf("{", pos_curly + 1);
             }
 
-            // 3. 'i' Matra on Half Letters
-            let pos_wrong = res.indexOf("ि्");
-            while (pos_wrong !== -1) {
-                if (pos_wrong + 2 < res.length) {
-                    let cons = res.charAt(pos_wrong + 2);
+            // Step C: FIX for 'o' (Velaanti)
+            let pos_o = res.indexOf("o");
+            while (pos_o !== -1) {
+                if (pos_o + 1 < res.length) {
+                    let next = res.charAt(pos_o + 1);
+                    // Avoid swapping if next is space
+                    if (next !== ' ' && next !== '्') {
+                         res = res.replace("o" + next, next + "ि");
+                    }
+                }
+                pos_o = res.indexOf("o", pos_o + 1);
+            }
+
+            // Step D: Half Letter with Velaanti (ि् -> ्...ि)
+            let pos_half = res.indexOf("ि्");
+            while (pos_half !== -1) {
+                if (pos_half + 2 < res.length) {
+                    let cons = res.charAt(pos_half + 2);
                     res = res.replace("ि्" + cons, "्" + cons + "ि");
                 }
-                pos_wrong = res.indexOf("ि्", pos_wrong + 2);
+                pos_half = res.indexOf("ि्", pos_half + 2);
             }
 
-            // 4. 'q' Logic
+            // Step E: 'q' -> 'o' (Anuswar Logic)
             let pos_q = res.indexOf("q");
             while (pos_q !== -1) {
                 if (pos_q + 1 < res.length) {
-                   let next = res.charAt(pos_q + 1);
-                   res = res.replace("q" + next, next + "o");
+                    let next = res.charAt(pos_q + 1);
+                    res = res.replace("q" + next, next + "o");
                 }
                 pos_q = res.indexOf("q", pos_q + 1);
             }
 
-            // 5. 'o' + Halant
-            let pos_o_hal = res.indexOf("o्");
-            while (pos_o_hal !== -1) {
-                 if (pos_o_hal + 2 < res.length) {
-                    let cons = res.charAt(pos_o_hal + 2);
+            // Step F: 'o' + Halant
+            let pos_oh = res.indexOf("o्");
+            while (pos_oh !== -1) {
+                if (pos_oh + 2 < res.length) {
+                    let cons = res.charAt(pos_oh + 2);
                     res = res.replace("o्" + cons, "्" + cons + "िं");
-                 }
-                 pos_o_hal = res.indexOf("o्", pos_o_hal + 3);
+                }
+                pos_oh = res.indexOf("o्", pos_oh + 3);
             }
 
-            // 6. Cleanup 'o'
+            // Cleanup: Any remaining 'o' becomes Anuswar
             res = res.replace(/o/g, "िं");
 
-            // 7. Reph (Rafar)
+            // Step G: Reph (Rafar) © -> र्
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
-                let prob_pos = pos_reph - 1;
-                while (prob_pos >= 0 && matras.includes(res.charAt(prob_pos))) {
-                    prob_pos--;
+                let prob = pos_reph - 1;
+                while (prob >= 0 && matras.includes(res.charAt(prob))) {
+                    prob--;
                 }
-                if (prob_pos < 0) prob_pos = 0;
+                if (prob < 0) prob = 0;
                 
-                let chunk = res.substring(prob_pos, pos_reph);
-                let before = res.substring(0, prob_pos);
+                let chunk = res.substring(prob, pos_reph);
+                let before = res.substring(0, prob);
                 let after = res.substring(pos_reph + 1);
                 
                 res = before + "र्" + chunk + after;
-                pos_reph = res.indexOf("©", prob_pos + chunk.length + 2);
+                pos_reph = res.indexOf("©", prob + chunk.length + 2);
             }
 
             return res;
@@ -143,7 +153,7 @@
 
         fileInput.addEventListener('change', () => {
             if(fileInput.files.length > 0) {
-                fileNameDiv.innerText = fileInput.files[0].name;
+                fileNameDiv.innerText = "Selected: " + fileInput.files[0].name;
                 convertBtn.disabled = false;
             }
         });
@@ -154,31 +164,37 @@
             statusDiv.innerText = "";
 
             try {
-                if (typeof JSZip === 'undefined') throw new Error("Please connect to Internet.");
+                if (typeof JSZip === 'undefined') throw new Error("Please check internet connection.");
 
                 const file = fileInput.files[0];
                 const arrayBuffer = await file.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
+                
+                // Validate
+                if (!zip.file("word/document.xml")) throw new Error("Invalid Word file.");
 
-                if (!zip.file("word/document.xml")) throw new Error("Invalid Docx.");
-
+                // Read
                 const docXml = await zip.file("word/document.xml").async("string");
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(docXml, "text/xml");
                 const textNodes = xmlDoc.getElementsByTagName("w:t");
 
+                // Convert
+                let count = 0;
                 for (let i = 0; i < textNodes.length; i++) {
                     let original = textNodes[i].textContent;
                     if (original && original.trim().length > 0) {
-                        // Apply Logic Here
-                        textNodes[i].textContent = convertTextLogic(original);
+                        textNodes[i].textContent = convertText(original);
+                        count++;
                     }
                 }
 
+                // Write Back
                 const serializer = new XMLSerializer();
                 const newDocXml = serializer.serializeToString(xmlDoc);
                 zip.file("word/document.xml", newDocXml);
 
+                // Download
                 const blob = await zip.generateAsync({
                     type: "blob",
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -187,17 +203,19 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Converted_" + file.name;
+                a.download = "Fixed_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
 
                 convertBtn.innerText = "Done! Convert Another";
                 statusDiv.innerText = "Success! File Downloaded.";
+                statusDiv.style.color = "green";
 
             } catch (err) {
                 alert("Error: " + err.message);
-                statusDiv.innerText = "Failed: " + err.message;
+                statusDiv.innerText = "Error: " + err.message;
+                statusDiv.style.color = "red";
                 convertBtn.innerText = "Try Again";
                 convertBtn.disabled = false;
             }
