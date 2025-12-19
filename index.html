@@ -3,21 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi Word to Word</title>
+    <title>ShreeLipi Full Converter</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
         body { font-family: -apple-system, sans-serif; background: #f2f2f7; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 500px; margin: 40px auto; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .card { background: white; max-width: 600px; margin: 30px auto; padding: 30px; border-radius: 20px; box-shadow: 0 4px 25px rgba(0,0,0,0.1); }
         h2 { color: #1c1c1e; margin-bottom: 5px; }
-        p { color: #8e8e93; font-size: 14px; margin-bottom: 30px; }
         
         .upload-box {
             border: 2px dashed #007aff; background: #eef7ff; color: #007aff;
             padding: 40px; border-radius: 15px; font-weight: 600; cursor: pointer;
-            margin-bottom: 20px; transition: 0.2s;
+            margin: 20px 0; display: block;
         }
-        .upload-box:active { background: #dcebff; }
         input[type="file"] { display: none; }
 
         button {
@@ -26,97 +24,150 @@
         }
         button:disabled { background: #d1d1d6; cursor: not-allowed; }
         
-        #status { margin-top: 15px; font-size: 14px; color: #333; }
+        #status { margin-top: 15px; font-size: 14px; color: #333; font-weight: 500; }
+        #fileName { margin-bottom: 15px; color: #555; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Word to Word Converter</h2>
-        <p>Keep Formatting, Change Only Text</p>
+        <h2>Word to Word (Full Fix)</h2>
+        <p>Corrects broken characters like ¶, o, $, etc.</p>
 
         <label for="fileInput" class="upload-box">
             📄 Select Word File (.docx)
         </label>
         <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
         
-        <div id="fileName" style="margin-bottom: 20px; font-weight: 500; display:none;"></div>
+        <div id="fileName"></div>
 
         <button id="convertBtn" disabled>Convert Now</button>
         <div id="status"></div>
     </div>
 
     <script>
-        // --- 1. MAPPING LOGIC (SHREELIPI TO UNICODE) ---
-        const array_one = ["~","u","ª","}","n","p","H","·","I","»","J","½","K","M","À","N","µO","O","µÁ","Á","P","Q","R","¶S","S","¶T","T","U","Ê","W","Ï","V","Ë","Y","Ü","X","Z","Ý","\\","â","[","ß","^","ä","]","ã","_","å","`","a","c","ë","d","ì","e","û","í","f","î","g","ñ","h","j","ú","k","Ô","Û","Ú","à","Þ","Q­","º$","Ì","Ð","Õ","l","Îm","¸","„","ˆ","œ","Å","Am¡","Am{","Am|","Am","A","B©","B","C","D","E{","E","F","m°","m{","m|","{","|","m¡","m¢","¡","¢","m","r","s","t","w","þ","y","§","±","•","¥","²","Ñ","«","é","ê","&","$",">","µ"];
-        const array_two = ["©","©","©ं","{©","o","o","क","क्","ख","ख्","ग","ग्","घ","च","च्","छ","ज़","ज","ज़्‌","ज्","झ","ट","ठ","ड़","ड","ढ़","ढ","ण","ण्","थ","थ्","त","त्","ध","ध्","द","न","न्","फ","फ्","प","प्","भ","भ्","ब","ब्","म","म्","य","र","ल","ल्","व","व्","श","श्","श्","ष","ष्","स","स्","ह","क्ष","क्ष्","ज्ञ","द्द","द्व","द्य","प्र","न्न","ट्र","क्त","त्र","द्र","द्ध","श्र","त्त","क्क","ल्ल","ह्व","श्व","ट्ट","औ","ओ","ओं","आ","अ","ई","इ","उ","ऊ","ऐ","ए","ऋ","ॉ","ो","ों","े","ें","ौ","ौं","ै","ैं","ा","ी","ी","ीं","ु","ु","ू","ं","ं","ँ","ः","ृ","्","दृ","्र","रु","रू","।","","",""];
+        // --- 1. FULL DATA MAPPING (Taken directly from mapping.js) ---
+        const shreelipi_list = [
+            '…', 'b', 'ÿ', 'Ä', '@', 'Q´',
+            'u' ,  'ª' ,  '\}' ,  '\[' ,  'p',
+            'H' ,  '³' ,   'I' ,  '\»' ,  'J' ,  '½' ,  'K' ,  
+            'M' ,  'À' ,  'N' ,   'µO' ,  'O' ,   'µÁ' ,  'Á' ,  'P' ,
+            'Q' ,  'R' ,   '\¶S' ,  'S' ,   '\¶T' ,   'T' ,   'U' ,  'Ê' , 
+            'W' , 'Ï' ,  'V' ,  'Ë' ,  'Y',  'Ü' ,  'X' ,  'Z' ,  'Ý' ,
+            '\’' ,  'â' ,  'n' ,  'ß' ,  '\^' ,   'ä' ,  '\~' ,   'ã' ,   '\‘'  ,  'å' ,
+            '\¶' ,   'a' ,  'c' ,  'ë',  'd' ,   'ì',   
+            'e' ,  'û' ,  'í' ,  'f' ,  'î' ,  'g' ,  'ñ' ,  'h' ,  'j' ,  'ú' ,  'k' ,
+            'Ô' ,  'Û' ,  'Ú' ,  'à' ,  'Þ' , 'Q­' ,  'º$' ,  'Ì' ,  'Ð' ,  'Õ' ,  'l' ,  'Îm' ,   '\¸' ,   '\„' ,  '\ˆ' ,  'œ' ,  'Å' ,
+            'Am¡' ,  'Amo' ,  'Am|' ,  'Am' ,  'A' ,  'B©' ,  'B' , 'C' , 'D',   'Eo',  'E' ,  'F' ,
+            'm°' ,    'mo' ,    'm|' ,    'o' ,   '|' ,  'm¡' ,   'm¢' ,   '¡' ,   '¢' , 
+            'm' ,    'r' ,   's' ,  't' ,    'w' ,  'þ' ,  'y' ,   '§' ,  '±',  '•' ,  '¥' ,  '²' , 
+            'Ñ' ,  '\«' ,  'é' ,  'ê' ,  '&' ,  '$' ,  '\>' ,  'µ'
+        ];
 
-        function convertText(text) {
-            if (!text) return "";
-            let modified = text;
+        const unicode_list = [
+            'ः', "ल",  "ू", "ञ्", 'ऽ', 'ट्र',
+            '©' ,  '©ं' ,  '\{©' ,  '\{', '\{',
+            "क",  'क्' , "ख",   'ख्' ,  "ग" ,  'ग्' ,  'घ' ,  
+            'च',  'च्',  'छ' ,  'ज़' ,  'ज' ,  'ज़्' ,  'ज्' ,  'झ' ,
+            "ट",  "ठ",   'ड़' ,  "ड",   'ढ़' ,  'ढ' , "ण" , 'ण्' ,
+            "थ",  'थ्' ,  "त",  'त्' ,  "ध", 'ध्' ,  "द",  "न" ,  'न्' ,
+            "फ", 'फ्' ,  "प", 'प्' ,  "भ",  'भ्' ,  "ब",  'ब्' ,  "म" ,   'म्' ,
+            "य",   "र",   "ल",  'ल्' ,   "व",   'व्' ,  
+            "श",  'श्' ,  'श्' ,  'ष' ,   'ष्' ,  "स",  'स्', "ह",  'क्ष' ,  'क्ष्' ,  'ज्ञ' ,
+            'द्द',  'द्व' , 'द्य' ,  'प्र',  'न्न' ,  'ट्र' , 'क्त' ,  'त्र' ,  'द्र',  'द्ध' ,  'श्र' ,  'त्त' ,  'क्क' ,  'ल्ल' ,  'ह्व' ,  'श्व' ,  'ट्ट' ,
+            'औ' ,  'ओ' , 'ओं' ,  'आ' ,  'अ' ,  'ई' ,  'इ' ,   'उ' ,  'ऊ' ,  'ऐ' ,  'ए' ,  'ऋ' ,
+            'ॉ' , "ो",  "ों",  "े",  "ें",  "ौ",  "ौं",   "ै",  'ैं' ,  
+            "ा",  "ी",  "ी",  "ीं",  "ु",  'ु' ,  "ू",  'ं' ,  'ँ' ,  'ः' ,  'ृ' , '्' ,  
+            'दृ' ,  '्र' ,  'रु' ,  'रू' ,  '।' ,  ''  ,  '' ,  ''
+        ];
 
-            // 1. Basic Replacement
-            for (let i = 0; i < array_one.length; i++) {
-                if (array_one[i] && array_two[i]) {
-                     // Using split/join for global replacement ensuring special chars are handled
-                     modified = modified.split(array_one[i]).join(array_two[i]);
+        // --- 2. EXACT LOGIC FROM CONVERT.JS ---
+        function convert_to_unicode_logic(modified_substring) {
+            if (!modified_substring) return "";
+
+            // 1. Basic Replacement Loop
+            for (let i = 0; i < shreelipi_list.length; i++) {
+                if (shreelipi_list[i] && unicode_list[i]) {
+                    // Using split/join handles special regex chars automatically
+                    modified_substring = modified_substring.split(shreelipi_list[i]).join(unicode_list[i]);
                 }
             }
 
-            // 2. 'i' Matra Fix (o -> ि)
-            let pos_i = modified.indexOf("o");
+            // 2. 'i' Matra Correction (o -> ि)
+            // Logic from convert.js: Find 'o', take next char, swap them.
+            // Using a simpler loop to avoid infinite loops if 'o' is replaced incorrectly
+            let pos_i = modified_substring.indexOf("o");
             while (pos_i !== -1) {
-                let next_char = modified.charAt(pos_i + 1);
-                modified = modified.replace("o" + next_char, next_char + "ि");
-                pos_i = modified.indexOf("o", pos_i + 1);
+                if (pos_i + 1 < modified_substring.length) {
+                    let char_next = modified_substring.charAt(pos_i + 1);
+                    // Prevent swapping if next char is space or special char
+                    if(char_next !== ' ') {
+                        let to_replace = "o" + char_next;
+                        modified_substring = modified_substring.replace(to_replace, char_next + "ि");
+                    } else {
+                         // If 'o' is alone or at end, it might be anuswar or mistake
+                         // For now, let's treat remaining 'o' as Anuswar later
+                         break; 
+                    }
+                }
+                pos_i = modified_substring.indexOf("o", pos_i + 1);
             }
 
-            // 3. 'i' Matra on Half Letters Fix
-            let pos_wrong = modified.indexOf("ि्");
-            while (pos_wrong !== -1) {
-                let cons = modified.charAt(pos_wrong + 2);
-                modified = modified.replace("ि्" + cons, "्" + cons + "ि");
-                pos_wrong = modified.indexOf("ि्", pos_wrong + 2);
+            // 3. 'i' Matra on Half Letters (ि् -> ्...ि)
+            let pos_wrong_ee = modified_substring.indexOf("ि्");
+            while (pos_wrong_ee !== -1) {
+                if (pos_wrong_ee + 2 < modified_substring.length) {
+                    let cons = modified_substring.charAt(pos_wrong_ee + 2);
+                    let replace_str = "ि्" + cons;
+                    modified_substring = modified_substring.replace(replace_str, "्" + cons + "ि");
+                }
+                pos_wrong_ee = modified_substring.indexOf("ि्", pos_wrong_ee + 2);
             }
 
-            // 4. 'q' Fix (q -> o substitution logic)
-            let pos_q = modified.indexOf("q");
+            // 4. 'q' Logic (q -> o substitution)
+            // In convert.js: q + char -> char + o. But 'o' is Anuswar later?
+            // Actually 'o' is mapped to 'ि' earlier, but here 'q' becomes 'o' which convert.js logic implies is Anuswar.
+            let pos_q = modified_substring.indexOf("q");
             while (pos_q !== -1) {
-                let next_char = modified.charAt(pos_q + 1);
-                modified = modified.replace("q" + next_char, next_char + "o");
+                let char_next = modified_substring.charAt(pos_q + 1);
+                modified_substring = modified_substring.replace("q" + char_next, char_next + "o");
                 pos_q = modified.indexOf("q", pos_q + 1);
             }
-
-            // 5. 'o' + Halant Fix
-            let pos_o_halant = modified.indexOf("o्");
-            while (pos_o_halant !== -1) {
-                let cons = modified.charAt(pos_o_halant + 2);
-                modified = modified.replace("o्" + cons, "्" + cons + "िं");
-                pos_o_halant = modified.indexOf("o्", pos_o_halant + 3);
-            }
             
-            // Cleanup remaining 'o'
-            modified = modified.replace(/o/g, "िं");
+            // 5. 'o' + Halant
+            let pos_o_halant = modified_substring.indexOf("o्");
+            while (pos_o_halant !== -1) {
+                 let cons = modified_substring.charAt(pos_o_halant + 2);
+                 modified_substring = modified_substring.replace("o्" + cons, "्" + cons + "िं");
+                 pos_o_halant = modified_substring.indexOf("o्", pos_o_halant + 3);
+            }
 
-            // 6. Reph (Rafar) Fix (© -> र्)
+            // 6. Cleanup 'o' -> Anuswar
+            // Any 'o' remaining is treated as Anuswar (convert.js logic)
+            modified_substring = modified_substring.replace(/o/g, "िं");
+
+            // 7. Reph (Rafar) Fix (© -> र्)
             const matras = "ािीुूृेैोौंःँॅ";
-            let pos_reph = modified.indexOf("©");
+            let pos_reph = modified_substring.indexOf("©");
             while (pos_reph > 0) {
                 let prob_pos = pos_reph - 1;
-                while (matras.includes(modified.charAt(prob_pos))) {
+                while (prob_pos >= 0 && matras.includes(modified_substring.charAt(prob_pos))) {
                     prob_pos--;
                 }
-                let chunk = modified.substring(prob_pos, pos_reph);
-                let before = modified.substring(0, prob_pos);
-                let after = modified.substring(pos_reph + 1);
-                modified = before + "र्" + chunk + after;
-                pos_reph = modified.indexOf("©", prob_pos + chunk.length + 1);
+                if (prob_pos < 0) prob_pos = 0;
+                
+                let chunk = modified_substring.substring(prob_pos, pos_reph);
+                let before = modified_substring.substring(0, prob_pos);
+                let after = modified_substring.substring(pos_reph + 1);
+                
+                modified_substring = before + "र्" + chunk + after;
+                pos_reph = modified_substring.indexOf("©", prob_pos + chunk.length + 2);
             }
 
-            return modified;
+            return modified_substring;
         }
 
-        // --- 2. FILE HANDLING LOGIC ---
+        // --- 3. FILE PROCESSING ---
         const fileInput = document.getElementById('fileInput');
         const convertBtn = document.getElementById('convertBtn');
         const fileNameDiv = document.getElementById('fileName');
@@ -124,7 +175,6 @@
 
         fileInput.addEventListener('change', () => {
             if(fileInput.files.length > 0) {
-                fileNameDiv.style.display = 'block';
                 fileNameDiv.innerText = fileInput.files[0].name;
                 convertBtn.disabled = false;
             }
@@ -132,51 +182,41 @@
 
         convertBtn.addEventListener('click', async () => {
             convertBtn.disabled = true;
-            convertBtn.innerText = "Processing...";
+            convertBtn.innerText = "Converting...";
             statusDiv.innerText = "";
 
             try {
-                if (typeof JSZip === 'undefined') throw new Error("Internet connection needed for library.");
-                
+                if (typeof JSZip === 'undefined') throw new Error("Internet Needed.");
+
                 const file = fileInput.files[0];
                 const arrayBuffer = await file.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
 
-                // Check for document.xml
-                if (!zip.file("word/document.xml")) {
-                    throw new Error("Invalid .docx file.");
-                }
+                if (!zip.file("word/document.xml")) throw new Error("Invalid Docx.");
 
-                // Read Content
                 const docXml = await zip.file("word/document.xml").async("string");
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(docXml, "text/xml");
-                
-                // Find all Text Nodes (<w:t>)
                 const textNodes = xmlDoc.getElementsByTagName("w:t");
 
                 let count = 0;
                 for (let i = 0; i < textNodes.length; i++) {
-                    const original = textNodes[i].textContent;
-                    if (original && original.trim() !== "") {
-                        // Apply Conversion
-                        textNodes[i].textContent = convertText(original);
+                    let original = textNodes[i].textContent;
+                    if (original && original.trim().length > 0) {
+                        textNodes[i].textContent = convert_to_unicode_logic(original);
                         count++;
                     }
                 }
 
-                // Serialize back to XML
                 const serializer = new XMLSerializer();
                 const newDocXml = serializer.serializeToString(xmlDoc);
                 zip.file("word/document.xml", newDocXml);
 
-                // Generate Blob (Correct MIME for Word)
                 const blob = await zip.generateAsync({
                     type: "blob",
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 });
 
-                // Download
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -186,13 +226,11 @@
                 document.body.removeChild(a);
 
                 convertBtn.innerText = "Done! Convert Another";
-                statusDiv.innerText = `Success! Converted ${count} text parts.`;
+                statusDiv.innerText = `Success!`;
 
             } catch (err) {
-                console.error(err);
-                statusDiv.innerText = "Error: " + err.message;
+                alert("Error: " + err.message);
                 convertBtn.innerText = "Try Again";
-            } finally {
                 convertBtn.disabled = false;
             }
         });
