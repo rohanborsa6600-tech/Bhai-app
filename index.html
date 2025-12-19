@@ -3,144 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word to Word Converter</title>
+    <title>ShreeLipi Word to Word</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; padding: 20px; background: #f2f2f7; text-align: center; }
-        .box { background: white; max-width: 500px; margin: 30px auto; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        
+        body { font-family: -apple-system, sans-serif; background: #f2f2f7; text-align: center; padding: 20px; }
+        .card { background: white; max-width: 500px; margin: 40px auto; padding: 30px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h2 { color: #1c1c1e; margin-bottom: 5px; }
-        p { color: #8e8e93; font-size: 14px; margin-bottom: 25px; }
-
-        .upload-btn {
-            display: flex; align-items: center; justify-content: center;
-            height: 120px; border: 2px dashed #007aff; background: #eef7ff;
-            color: #007aff; border-radius: 15px; font-weight: 600; cursor: pointer;
+        p { color: #8e8e93; font-size: 14px; margin-bottom: 30px; }
+        
+        .upload-box {
+            border: 2px dashed #007aff; background: #eef7ff; color: #007aff;
+            padding: 40px; border-radius: 15px; font-weight: 600; cursor: pointer;
             margin-bottom: 20px; transition: 0.2s;
         }
-        .upload-btn:active { background: #dcebff; }
-        
+        .upload-box:active { background: #dcebff; }
         input[type="file"] { display: none; }
 
         button {
-            background: #007aff; color: white; border: none; padding: 18px; width: 100%;
+            background: #007aff; color: white; border: none; padding: 16px; width: 100%;
             border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
         }
-        button:disabled { background: #d1d1d6; color: #8e8e93; cursor: not-allowed; }
-
-        #fileName { font-weight: 500; color: #333; margin-bottom: 20px; display: none; }
+        button:disabled { background: #d1d1d6; cursor: not-allowed; }
+        
+        #status { margin-top: 15px; font-size: 14px; color: #333; }
     </style>
 </head>
 <body>
 
-    <div class="box">
+    <div class="card">
         <h2>Word to Word Converter</h2>
-        <p>ShreeLipi to Unicode (Format Tasach Rahil)</p>
-        
-        <label for="fileInput" class="upload-btn">
-            📂 Tap here to Select Word File
+        <p>Keep Formatting, Change Only Text</p>
+
+        <label for="fileInput" class="upload-box">
+            📄 Select Word File (.docx)
         </label>
         <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
         
-        <div id="fileName"></div>
+        <div id="fileName" style="margin-bottom: 20px; font-weight: 500; display:none;"></div>
 
-        <button id="convertBtn" disabled>Convert File</button>
+        <button id="convertBtn" disabled>Convert Now</button>
+        <div id="status"></div>
     </div>
 
     <script>
-        const fileInput = document.getElementById('fileInput');
-        const fileNameDisplay = document.getElementById('fileName');
-        const convertBtn = document.getElementById('convertBtn');
+        // --- 1. MAPPING LOGIC (SHREELIPI TO UNICODE) ---
+        const array_one = ["~","u","ª","}","n","p","H","·","I","»","J","½","K","M","À","N","µO","O","µÁ","Á","P","Q","R","¶S","S","¶T","T","U","Ê","W","Ï","V","Ë","Y","Ü","X","Z","Ý","\\","â","[","ß","^","ä","]","ã","_","å","`","a","c","ë","d","ì","e","û","í","f","î","g","ñ","h","j","ú","k","Ô","Û","Ú","à","Þ","Q­","º$","Ì","Ð","Õ","l","Îm","¸","„","ˆ","œ","Å","Am¡","Am{","Am|","Am","A","B©","B","C","D","E{","E","F","m°","m{","m|","{","|","m¡","m¢","¡","¢","m","r","s","t","w","þ","y","§","±","•","¥","²","Ñ","«","é","ê","&","$",">","µ"];
+        const array_two = ["©","©","©ं","{©","o","o","क","क्","ख","ख्","ग","ग्","घ","च","च्","छ","ज़","ज","ज़्‌","ज्","झ","ट","ठ","ड़","ड","ढ़","ढ","ण","ण्","थ","थ्","त","त्","ध","ध्","द","न","न्","फ","फ्","प","प्","भ","भ्","ब","ब्","म","म्","य","र","ल","ल्","व","व्","श","श्","श्","ष","ष्","स","स्","ह","क्ष","क्ष्","ज्ञ","द्द","द्व","द्य","प्र","न्न","ट्र","क्त","त्र","द्र","द्ध","श्र","त्त","क्क","ल्ल","ह्व","श्व","ट्ट","औ","ओ","ओं","आ","अ","ई","इ","उ","ऊ","ऐ","ए","ऋ","ॉ","ो","ों","े","ें","ौ","ौं","ै","ैं","ा","ी","ी","ीं","ु","ु","ू","ं","ं","ँ","ः","ृ","्","दृ","्र","रु","रू","।","","",""];
 
-        // 1. File Selection
-        fileInput.addEventListener('change', function() {
-            if (this.files && this.files.length > 0) {
-                fileNameDisplay.style.display = 'block';
-                fileNameDisplay.innerText = "Selected: " + this.files[0].name;
+        function convertText(text) {
+            if (!text) return "";
+            let modified = text;
+
+            // 1. Basic Replacement
+            for (let i = 0; i < array_one.length; i++) {
+                if (array_one[i] && array_two[i]) {
+                     // Using split/join for global replacement ensuring special chars are handled
+                     modified = modified.split(array_one[i]).join(array_two[i]);
+                }
+            }
+
+            // 2. 'i' Matra Fix (o -> ि)
+            let pos_i = modified.indexOf("o");
+            while (pos_i !== -1) {
+                let next_char = modified.charAt(pos_i + 1);
+                modified = modified.replace("o" + next_char, next_char + "ि");
+                pos_i = modified.indexOf("o", pos_i + 1);
+            }
+
+            // 3. 'i' Matra on Half Letters Fix
+            let pos_wrong = modified.indexOf("ि्");
+            while (pos_wrong !== -1) {
+                let cons = modified.charAt(pos_wrong + 2);
+                modified = modified.replace("ि्" + cons, "्" + cons + "ि");
+                pos_wrong = modified.indexOf("ि्", pos_wrong + 2);
+            }
+
+            // 4. 'q' Fix (q -> o substitution logic)
+            let pos_q = modified.indexOf("q");
+            while (pos_q !== -1) {
+                let next_char = modified.charAt(pos_q + 1);
+                modified = modified.replace("q" + next_char, next_char + "o");
+                pos_q = modified.indexOf("q", pos_q + 1);
+            }
+
+            // 5. 'o' + Halant Fix
+            let pos_o_halant = modified.indexOf("o्");
+            while (pos_o_halant !== -1) {
+                let cons = modified.charAt(pos_o_halant + 2);
+                modified = modified.replace("o्" + cons, "्" + cons + "िं");
+                pos_o_halant = modified.indexOf("o्", pos_o_halant + 3);
+            }
+            
+            // Cleanup remaining 'o'
+            modified = modified.replace(/o/g, "िं");
+
+            // 6. Reph (Rafar) Fix (© -> र्)
+            const matras = "ािीुूृेैोौंःँॅ";
+            let pos_reph = modified.indexOf("©");
+            while (pos_reph > 0) {
+                let prob_pos = pos_reph - 1;
+                while (matras.includes(modified.charAt(prob_pos))) {
+                    prob_pos--;
+                }
+                let chunk = modified.substring(prob_pos, pos_reph);
+                let before = modified.substring(0, prob_pos);
+                let after = modified.substring(pos_reph + 1);
+                modified = before + "र्" + chunk + after;
+                pos_reph = modified.indexOf("©", prob_pos + chunk.length + 1);
+            }
+
+            return modified;
+        }
+
+        // --- 2. FILE HANDLING LOGIC ---
+        const fileInput = document.getElementById('fileInput');
+        const convertBtn = document.getElementById('convertBtn');
+        const fileNameDiv = document.getElementById('fileName');
+        const statusDiv = document.getElementById('status');
+
+        fileInput.addEventListener('change', () => {
+            if(fileInput.files.length > 0) {
+                fileNameDiv.style.display = 'block';
+                fileNameDiv.innerText = fileInput.files[0].name;
                 convertBtn.disabled = false;
-                convertBtn.innerText = "Convert File";
             }
         });
 
-        // 2. Logic: ShreeLipi to Unicode (Exact Logic)
-        const shree = ['u','ª','}','n','p','H','·','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','\\','â','[','ß','^','ä',']','ã','_','å','`','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Am{','Am|','Am','A','B©','B','C','D','E{','E','F','m°','m{','m|','{','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ'];
-        const uni = ['©','©ं','{©','o','o',"क",'क्‌',"ख",'ख्‌',"ग",'ग्',"घ",'च','च्‌','छ','ज़','ज','ज़्‌','ज्‌','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्‌',"प",'प्‌',"भ",'भ्',"ब",'ब्‌',"म",'म्',"य","र","ल",'ल्‌',"व",'व्‌',"श",'श्','श्',"ष",'ष्‌',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्‌','दृ','्र','रु','रू','।','','',''];
-
-        function convertString(txt) {
-            if (!txt) return "";
-            let res = txt;
-            
-            // Basic Replacement
-            for(let i=0; i<shree.length; i++) {
-                if(shree[i] && uni[i]) res = res.split(shree[i]).join(uni[i]);
-            }
-
-            // Fixes (Velaanti & Rafar)
-            while(res.includes("o")) {
-                let idx = res.indexOf("o");
-                if(idx < res.length-1) {
-                    let next = res.charAt(idx+1);
-                    res = res.substring(0, idx) + next + "ि" + res.substring(idx+2);
-                } else { res = res.replace("o", "िं"); }
-            }
-            res = res.replace(/o/g, "िं");
-            
-            const matras = "ािीुूृेैोौंःँॅ";
-            let rIdx = res.indexOf("©");
-            while(rIdx > 0) {
-                let p = rIdx - 1;
-                while(p >= 0 && matras.includes(res.charAt(p))) p--;
-                if(p < 0) p = 0;
-                let chunk = res.substring(p, rIdx);
-                res = res.substring(0, p) + "र्" + chunk + res.substring(rIdx+1);
-                rIdx = res.indexOf("©", p + chunk.length + 2);
-            }
-            return res;
-        }
-
-        // 3. Main Process: Docx Structure Modifying
         convertBtn.addEventListener('click', async () => {
-            if (!fileInput.files.length) return;
-            
             convertBtn.disabled = true;
             convertBtn.innerText = "Processing...";
-            
+            statusDiv.innerText = "";
+
             try {
-                if (typeof JSZip === 'undefined') throw new Error("Internet is needed. Please connect.");
-
-                const file = fileInput.files[0];
-                const data = await file.arrayBuffer();
-                const zip = await JSZip.loadAsync(data);
+                if (typeof JSZip === 'undefined') throw new Error("Internet connection needed for library.");
                 
-                // document.xml (Main Content)
-                if (zip.file("word/document.xml")) {
-                    const docXml = await zip.file("word/document.xml").async("string");
-                    const parser = new DOMParser();
-                    const xmlDoc = parser.parseFromString(docXml, "text/xml");
-                    const textNodes = xmlDoc.getElementsByTagName("w:t"); // Fakt Text Nodes
+                const file = fileInput.files[0];
+                const arrayBuffer = await file.arrayBuffer();
+                const zip = await JSZip.loadAsync(arrayBuffer);
 
-                    for (let i = 0; i < textNodes.length; i++) {
-                        let original = textNodes[i].textContent;
-                        if(original && original.trim().length > 0) {
-                            textNodes[i].textContent = convertString(original);
-                        }
-                    }
-
-                    const serializer = new XMLSerializer();
-                    const newXml = serializer.serializeToString(xmlDoc);
-                    zip.file("word/document.xml", newXml);
+                // Check for document.xml
+                if (!zip.file("word/document.xml")) {
+                    throw new Error("Invalid .docx file.");
                 }
 
-                // Headers/Footers (Optional: Jar header madhe pan shreelipi asel tar)
-                zip.forEach(async (relativePath, zipEntry) => {
-                    if (relativePath.startsWith("word/header") || relativePath.startsWith("word/footer")) {
-                        const xml = await zipEntry.async("string");
-                        // Future improvement: Process headers same as body
-                    }
-                });
+                // Read Content
+                const docXml = await zip.file("word/document.xml").async("string");
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(docXml, "text/xml");
+                
+                // Find all Text Nodes (<w:t>)
+                const textNodes = xmlDoc.getElementsByTagName("w:t");
 
-                // Generate new Docx
+                let count = 0;
+                for (let i = 0; i < textNodes.length; i++) {
+                    const original = textNodes[i].textContent;
+                    if (original && original.trim() !== "") {
+                        // Apply Conversion
+                        textNodes[i].textContent = convertText(original);
+                        count++;
+                    }
+                }
+
+                // Serialize back to XML
+                const serializer = new XMLSerializer();
+                const newDocXml = serializer.serializeToString(xmlDoc);
+                zip.file("word/document.xml", newDocXml);
+
+                // Generate Blob (Correct MIME for Word)
                 const blob = await zip.generateAsync({
                     type: "blob",
                     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -150,17 +180,19 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Converted_" + file.name; // Name same, just prefix
+                a.download = "Converted_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
 
-                convertBtn.innerText = "Done! Open File";
-                setTimeout(() => convertBtn.disabled = false, 2000);
+                convertBtn.innerText = "Done! Convert Another";
+                statusDiv.innerText = `Success! Converted ${count} text parts.`;
 
             } catch (err) {
-                alert("Error: " + err.message);
+                console.error(err);
+                statusDiv.innerText = "Error: " + err.message;
                 convertBtn.innerText = "Try Again";
+            } finally {
                 convertBtn.disabled = false;
             }
         });
