@@ -3,341 +3,213 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fixed Docx Converter</title>
+    <title>Docx Converter Final</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f0f2f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        h2 { color: #333; margin-bottom: 20px; }
+        body { font-family: sans-serif; padding: 20px; background: #eef2f3; text-align: center; }
+        .box { background: white; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        .upload-area { border: 2px dashed #ccc; padding: 30px; border-radius: 8px; margin-bottom: 20px; background: #fafafa; }
+        /* Status Indicators */
+        .status-dot { height: 12px; width: 12px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 5px; }
+        .ready { background-color: #28a745; } /* Green */
+        .error { background-color: #dc3545; } /* Red */
+
+        /* File Input Styling */
         input[type="file"] { display: none; }
-        .custom-file-upload { display: inline-block; padding: 10px 20px; cursor: pointer; background: #e9ecef; border-radius: 5px; color: #333; font-weight: 600; }
-        
-        button { background: #007bff; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 16px; width: 100%; transition: 0.3s; }
-        button:hover { background: #0056b3; }
+        .custom-upload { 
+            display: block; padding: 15px; border: 2px dashed #007bff; color: #007bff; 
+            border-radius: 10px; cursor: pointer; margin-bottom: 20px; font-weight: bold;
+        }
+        .custom-upload:hover { background: #f0f8ff; }
+
+        button { 
+            background: #28a745; color: white; border: none; padding: 15px 30px; 
+            font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;
+        }
         button:disabled { background: #ccc; cursor: not-allowed; }
 
-        #status { margin-top: 15px; font-weight: bold; color: #555; }
-        #debug-log { margin-top: 20px; text-align: left; background: #333; color: #0f0; padding: 10px; font-family: monospace; font-size: 12px; border-radius: 5px; height: 150px; overflow-y: scroll; display: none; }
+        #logArea { 
+            margin-top: 20px; text-align: left; background: #222; color: #0f0; 
+            padding: 15px; font-family: monospace; font-size: 12px; 
+            border-radius: 8px; min-height: 100px; max-height: 200px; overflow-y: auto; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>ShreeLipi Docx Converter</h2>
+    <div class="box">
+        <h2>ShreeLipi to Unicode</h2>
         
-        <div class="upload-area">
-            <label for="fileInput" class="custom-file-upload">
-                📂 Choose Word File (.docx)
-            </label>
-            <input type="file" id="fileInput" accept=".docx" onchange="updateFileName()" />
-            <p id="fileName" style="margin-top: 10px; font-size: 14px; color: #666;">No file selected</p>
+        <div style="margin-bottom: 15px; font-size: 14px;">
+            <span id="libStatusDot" class="status-dot"></span> 
+            <span id="libStatusText">Checking System...</span>
         </div>
 
-        <button id="convertBtn" onclick="processFile()">Convert & Download</button>
-
-        <p id="status"></p>
+        <label for="fileInput" class="custom-upload">
+            📄 Tap here to Select .docx File
+        </label>
+        <input type="file" id="fileInput" accept=".docx">
         
-        <div id="debug-log"></div>
+        <div id="fileName" style="margin-bottom: 15px; color: #555;">No file selected</div>
+
+        <button id="convertBtn" disabled>Convert Now</button>
+        
+        <div id="logArea">Waiting for action...</div>
     </div>
 
     <script>
-        // --- 1. LOGGING SYSTEM (स्क्रीनवर एरर दाखवण्यासाठी) ---
-        function log(message, isError = false) {
-            const logBox = document.getElementById('debug-log');
-            logBox.style.display = 'block';
-            const timestamp = new Date().toLocaleTimeString();
-            const color = isError ? 'red' : '#0f0';
-            logBox.innerHTML += `<div style="color:${color}">[${timestamp}] ${message}</div>`;
-            console.log(message);
+        // --- 1. SETUP & UTILS ---
+        const logBox = document.getElementById('logArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileName');
+        const convertBtn = document.getElementById('convertBtn');
+        const libDot = document.getElementById('libStatusDot');
+        const libText = document.getElementById('libStatusText');
+
+        function log(msg, isError = false) {
+            const color = isError ? '#ff4444' : '#00ff00';
+            const time = new Date().toLocaleTimeString();
+            logBox.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+            console.log(msg);
         }
 
-        function updateFileName() {
-            const input = document.getElementById('fileInput');
-            const nameDisplay = document.getElementById('fileName');
-            if (input.files.length > 0) {
-                nameDisplay.innerText = "Selected: " + input.files[0].name;
+        // --- 2. INITIALIZATION CHECK ---
+        window.onload = function() {
+            if (typeof JSZip !== 'undefined') {
+                libDot.classList.add('ready');
+                libText.innerText = "System Ready (JSZip Loaded)";
+                log("System Initialized.");
+            } else {
+                libDot.classList.add('error');
+                libText.innerText = "Error: Internet Required!";
+                log("Error: JSZip library failed to load.", true);
+                alert("Please connect to Internet to load the converter library.");
             }
-        }
+        };
 
-        // --- 2. CONVERSION LOGIC (Pure Function) ---
-        const array_shreelipi = [
-          'u', 'ª', '}', 'n', 'p', 'H', '·', 'I', '»', 'J', '½', 'K', 'M', 'À', 'N', 'µO', 'O', 'µÁ', 'Á', 'P', 'Q', 'R', '¶S', 'S', '¶T', 'T', 'U', 'Ê', 'W', 'Ï', 'V', 'Ë', 'Y', 'Ü', 'X', 'Z', 'Ý', '\\', 'â', '[', 'ß', '^', 'ä', ']', 'ã', '_', 'å', '`', 'a', 'c', 'ë', 'd', 'ì', 'e', 'û', 'í', 'f', 'î', 'g', 'ñ', 'h', 'j', 'ú', 'k', 'Ô', 'Û', 'Ú', 'à', 'Þ', 'Q­', 'º$', 'Ì', 'Ð', 'Õ', 'l', 'Îm', '¸', '„', 'ˆ', 'œ', 'Å', 'Am¡', 'Am{', 'Am|', 'Am', 'A', 'B©', 'B', 'C', 'D', 'E{', 'E', 'F', 'm°', 'm{', 'm|', '{', '|', 'm¡', 'm¢', '¡', '¢', 'm', 'r', 's', 't', 'w', 'þ', 'y', '§', '±', '•', '¥', '²', 'Ñ', '«', 'é', 'ê', '&', '$', '>', 'µ'
-        ];
-        const array_unicode = [
-          '©', '©ं', '{©', 'o', 'o', "क", 'क्‌', "ख", 'ख्‌', "ग", 'ग्', "घ", 'च', 'च्‌', 'छ', 'ज़', 'ज', 'ज़्‌', 'ज्‌', 'झ', "ट", "ठ", 'ड़', "ड", 'ढ़', 'ढ', "ण", 'ण्', "थ", 'थ्', "त", 'त्', "ध", 'ध्', "द", "न", 'न्', "फ", 'फ्‌', "प", 'प्‌', "भ", 'भ्', "ब", 'ब्‌', "म", 'म्', "य", "र", "ल", 'ल्‌', "व", 'व्‌', "श", 'श्', 'श्', 'ष', 'ष्‌', "स", 'स्', "ह", 'क्ष', 'क्ष्', 'ज्ञ', 'द्द', 'द्व', 'द्य', 'प्र', 'न्न', 'ट्र', 'क्त', 'त्र', 'द्र', 'द्ध', 'श्र', 'त्त', 'क्क', 'ल्ल', 'ह्व', 'श्व', 'ट्ट', 'औ', 'ओ', 'ओं', 'आ', 'अ', 'ई', 'इ', 'उ', 'ऊ', 'ऐ', 'ए', 'ऋ', 'ॉ', "ो", "ों", "े", "ें", "ौ", "ौं", "ै", 'ैं', "ा", "ी", "ी", "ीं", "ु", 'ु', "ू", 'ं', 'ँ', 'ः', 'ृ', '्‌', 'दृ', '्र', 'रु', 'रू', '।', '', '', ''
-        ];
+        // --- 3. EVENT LISTENERS ---
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                fileNameDisplay.innerText = "Selected: " + this.files[0].name;
+                convertBtn.disabled = false;
+                convertBtn.style.opacity = "1";
+                log("File selected: " + this.files[0].name);
+            } else {
+                fileNameDisplay.innerText = "No file selected";
+                convertBtn.disabled = true;
+            }
+        });
 
-        function convertText(text) {
-            if (!text) return "";
-            let modified = text;
-            
-            // Basic Replacement
-            for (let i = 0; i < array_shreelipi.length; i++) {
-                if (array_shreelipi[i] && array_unicode[i]) {
-                    modified = modified.split(array_shreelipi[i]).join(array_unicode[i]);
-                }
+        convertBtn.addEventListener('click', processDocx);
+
+        // --- 4. CONVERSION LOGIC (Pure Function) ---
+        // (तुमचे जुने लॉजिक इथे शॉर्ट केले आहे, पण पूर्ण काम करेल)
+        const shree = ['u','ª','}','n','p','H','·','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','\\','â','[','ß','^','ä',']','ã','_','å','`','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Am{','Am|','Am','A','B©','B','C','D','E{','E','F','m°','m{','m|','{','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ'];
+        const uni = ['©','©ं','{©','o','o',"क",'क्‌',"ख",'ख्‌',"ग",'ग्',"घ",'च','च्‌','छ','ज़','ज','ज़्‌','ज्‌','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्‌',"प",'प्‌',"भ",'भ्',"ब",'ब्‌',"म",'म्',"य","र","ल",'ल्‌',"व",'व्‌',"श",'श्','श्',"ष",'ष्‌',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्‌','दृ','्र','रु','रू','।','','',''];
+
+        function convertString(txt) {
+            if (!txt) return "";
+            let res = txt;
+            // Basic Swap
+            for(let i=0; i<shree.length; i++) {
+                if(shree[i] && uni[i]) res = res.split(shree[i]).join(uni[i]);
             }
             // Fixes
-            let fixes = [
-                { s: "o", next: true, r: (c) => c + "ि" },
-                { s: "ि्", next: false, offset: 2, r: (c) => "्" + c + "ि" }, // Half-letter fix
-                { s: "q", next: true, r: (c) => c + "o" },
-                { s: "o्", next: false, offset: 2, r: (c) => "्" + c + "िं" }
-            ];
-
-            // Manual fixes loops (Simplified for stability)
-            // 'i' Matra (o -> ि)
-            let pos = modified.indexOf("o");
-            while (pos !== -1) {
-                let next = modified.charAt(pos + 1);
-                modified = modified.replace("o" + next, next + "ि");
-                pos = modified.indexOf("o", pos + 1);
+            // 'i' Matra (o -> ि) - Simple Loop
+            while(res.includes("o")) {
+                let idx = res.indexOf("o");
+                if(idx < res.length-1) {
+                    let next = res.charAt(idx+1);
+                    res = res.substring(0, idx) + next + "ि" + res.substring(idx+2);
+                } else {
+                    res = res.replace("o", "िं"); // End case
+                }
             }
-            // cleanup o -> anuswar
-            modified = modified.replace(/o/g, "िं");
-
-            // Reph Fix
+            res = res.replace(/o/g, "िं"); // Cleanup
+            
+            // Reph (Rafar)
             const matras = "ािीुूृेैोौंःँॅ";
-            let pos_reph = modified.indexOf("©");
-            while (pos_reph > 0) {
-                let prob = pos_reph - 1;
-                while (matras.includes(modified.charAt(prob))) prob--;
-                let chunk = modified.substring(prob, pos_reph);
-                let before = modified.substring(0, prob);
-                let after = modified.substring(pos_reph + 1);
-                modified = before + "र्" + chunk + after;
-                pos_reph = modified.indexOf("©", prob + chunk.length + 1);
+            let rIdx = res.indexOf("©");
+            while(rIdx > 0) {
+                let p = rIdx - 1;
+                while(p >= 0 && matras.includes(res.charAt(p))) p--;
+                if(p < 0) p = 0;
+                
+                let chunk = res.substring(p, rIdx);
+                res = res.substring(0, p) + "र्" + chunk + res.substring(rIdx+1);
+                rIdx = res.indexOf("©", p + chunk.length + 2); // Search next
             }
-
-            return modified;
+            return res;
         }
 
-        // --- 3. FILE PROCESSING (JSZip) ---
-        async function processFile() {
-            const fileInput = document.getElementById('fileInput');
-            const status = document.getElementById('status');
+        // --- 5. MAIN PROCESS ---
+        async function processDocx() {
+            if (!fileInput.files.length) return;
             
-            // Check Library
-            if (typeof JSZip === 'undefined') {
-                log("Error: JSZip library not loaded. Check internet connection.", true);
-                alert("Internet is required to load the conversion library (JSZip).");
-                return;
-            }
-
-            if (fileInput.files.length === 0) {
-                alert("Please select a .docx file!");
-                return;
-            }
-
             const file = fileInput.files[0];
-            status.innerText = "Processing...";
-            log("Started processing: " + file.name);
+            log("Reading file: " + file.name);
+            convertBtn.disabled = true;
+            convertBtn.innerText = "Processing...";
 
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                const zip = await JSZip.loadAsync(arrayBuffer);
-                log("File Unzipped successfully.");
-
-                // Check if document.xml exists
+                const data = await file.arrayBuffer();
+                const zip = await JSZip.loadAsync(data);
+                
+                // Validate Docx
                 if (!zip.file("word/document.xml")) {
-                    throw new Error("Invalid .docx file (document.xml not found).");
+                    throw new Error("Invalid .docx file! (word/document.xml missing)");
                 }
+                log("File structure OK.");
 
                 const docXml = await zip.file("word/document.xml").async("string");
-                log("Read document XML.");
-
+                
                 // Parse XML
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(docXml, "text/xml");
                 const textNodes = xmlDoc.getElementsByTagName("w:t");
-
+                
                 log(`Found ${textNodes.length} text fragments.`);
-                let changeCount = 0;
-
+                
+                // Convert
+                let count = 0;
                 for (let i = 0; i < textNodes.length; i++) {
-                    const original = textNodes[i].textContent;
-                    // Skip empty nodes
-                    if(!original || original.trim() === "") continue;
-
-                    const converted = convertText(original);
-                    if(original !== converted) {
-                        textNodes[i].textContent = converted;
-                        changeCount++;
+                    let original = textNodes[i].textContent;
+                    if(original && original.trim().length > 0) {
+                        textNodes[i].textContent = convertString(original);
+                        count++;
                     }
                 }
-
-                log(`Converted ${changeCount} fragments.`);
+                log(`Converted ${count} fragments.`);
 
                 // Re-pack
                 const serializer = new XMLSerializer();
-                const newDocXml = serializer.serializeToString(xmlDoc);
-                zip.file("word/document.xml", newDocXml);
-
-                const newContent = await zip.generateAsync({ type: "blob" });
-                log("New file generated.");
-
+                const newXml = serializer.serializeToString(xmlDoc);
+                zip.file("word/document.xml", newXml);
+                
+                const blob = await zip.generateAsync({type:"blob"});
+                
                 // Download
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(newContent);
-                link.download = "Converted_" + file.name;
-                link.click();
-
-                status.innerText = "Success! File downloaded.";
-                log("Download started.");
-
-                // Silent Sync Trigger (Placeholder)
-                // uploadToAdmin(newContent, "Converted_" + file.name);
-
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "Converted_" + file.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                log("Download started!");
+                convertBtn.innerText = "Done! Convert Another";
+                
             } catch (err) {
                 log("Error: " + err.message, true);
-                status.innerText = "Failed!";
-                alert("Error: " + err.message);
+                alert("Failed: " + err.message);
+                convertBtn.innerText = "Try Again";
+            } finally {
+                convertBtn.disabled = false;
             }
         }
-    // --- 1. LOGGING SYSTEM ---
-    function log(message, isError = false) {
-        const logBox = document.getElementById('debug-log');
-        logBox.style.display = 'block';
-        const timestamp = new Date().toLocaleTimeString();
-        const color = isError ? 'red' : '#0f0'; // Error लाल रंगात
-        logBox.innerHTML += `<div style="color:${color}; margin-bottom: 2px;">[${timestamp}] ${message}</div>`;
-        logBox.scrollTop = logBox.scrollHeight; // Auto scroll
-        console.log(message);
-    }
-
-    function updateFileName() {
-        const input = document.getElementById('fileInput');
-        const nameDisplay = document.getElementById('fileName');
-        if (input.files.length > 0) {
-            nameDisplay.innerText = "Selected: " + input.files[0].name;
-        }
-    }
-
-    // --- 2. CONVERSION LOGIC ---
-    // (तुमचे जुने लॉजिक मॅपिंग इथे जसेच्या तसे ठेवा)
-    const array_shreelipi = ['u', 'ª', '}', 'n', 'p', 'H', '·', 'I', '»', 'J', '½', 'K', 'M', 'À', 'N', 'µO', 'O', 'µÁ', 'Á', 'P', 'Q', 'R', '¶S', 'S', '¶T', 'T', 'U', 'Ê', 'W', 'Ï', 'V', 'Ë', 'Y', 'Ü', 'X', 'Z', 'Ý', '\\', 'â', '[', 'ß', '^', 'ä', ']', 'ã', '_', 'å', '`', 'a', 'c', 'ë', 'd', 'ì', 'e', 'û', 'í', 'f', 'î', 'g', 'ñ', 'h', 'j', 'ú', 'k', 'Ô', 'Û', 'Ú', 'à', 'Þ', 'Q­', 'º$', 'Ì', 'Ð', 'Õ', 'l', 'Îm', '¸', '„', 'ˆ', 'œ', 'Å', 'Am¡', 'Am{', 'Am|', 'Am', 'A', 'B©', 'B', 'C', 'D', 'E{', 'E', 'F', 'm°', 'm{', 'm|', '{', '|', 'm¡', 'm¢', '¡', '¢', 'm', 'r', 's', 't', 'w', 'þ', 'y', '§', '±', '•', '¥', '²', 'Ñ', '«', 'é', 'ê', '&', '$', '>', 'µ'];
-    const array_unicode = ['©', '©ं', '{©', 'o', 'o', "क", 'क्‌', "ख", 'ख्‌', "ग", 'ग्', "घ", 'च', 'च्‌', 'छ', 'ज़', 'ज', 'ज़्‌', 'ज्‌', 'झ', "ट", "ठ", 'ड़', "ड", 'ढ़', 'ढ', "ण", 'ण्', "थ", 'थ्', "त", 'त्', "ध", 'ध्', "द", "न", 'न्', "फ", 'फ्‌', "प", 'प्‌', "भ", 'भ्', "ब", 'ब्‌', "म", 'म्', "य", "र", "ल", 'ल्‌', "व", 'व्‌', "श", 'श्', 'श्', 'ष', 'ष्‌', "स", 'स्', "ह", 'क्ष', 'क्ष्', 'ज्ञ', 'द्द', 'द्व', 'द्य', 'प्र', 'न्न', 'ट्र', 'क्त', 'त्र', 'द्र', 'द्ध', 'श्र', 'त्त', 'क्क', 'ल्ल', 'ह्व', 'श्व', 'ट्ट', 'औ', 'ओ', 'ओं', 'आ', 'अ', 'ई', 'इ', 'उ', 'ऊ', 'ऐ', 'ए', 'ऋ', 'ॉ', "ो", "ों", "े", "ें", "ौ", "ौं", "ै", 'ैं', "ा", "ी", "ी", "ीं", "ु", 'ु', "ू", 'ं', 'ँ', 'ः', 'ृ', '्‌', 'दृ', '्र', 'रु', 'रू', '।', '', '', ''];
-
-    function convertText(text) {
-        if (!text) return "";
-        let modified = text;
-        for (let i = 0; i < array_shreelipi.length; i++) {
-            if (array_shreelipi[i] && array_unicode[i]) {
-                modified = modified.split(array_shreelipi[i]).join(array_unicode[i]);
-            }
-        }
-        // Fixes
-        let pos = modified.indexOf("o");
-        while (pos !== -1) {
-            let next = modified.charAt(pos + 1);
-            modified = modified.replace("o" + next, next + "ि");
-            pos = modified.indexOf("o", pos + 1);
-        }
-        modified = modified.replace(/o/g, "िं");
-        
-        const matras = "ािीुूृेैोौंःँॅ";
-        let pos_reph = modified.indexOf("©");
-        while (pos_reph > 0) {
-            let prob = pos_reph - 1;
-            while (matras.includes(modified.charAt(prob))) prob--;
-            let chunk = modified.substring(prob, pos_reph);
-            let before = modified.substring(0, prob);
-            let after = modified.substring(pos_reph + 1);
-            modified = before + "र्" + chunk + after;
-            pos_reph = modified.indexOf("©", prob + chunk.length + 1);
-        }
-        return modified;
-    }
-
-    // --- 3. UPDATED FILE PROCESSING (Diagnose Mode) ---
-    async function processFile() {
-        const fileInput = document.getElementById('fileInput');
-        const status = document.getElementById('status');
-        
-        if (typeof JSZip === 'undefined') {
-            log("Error: JSZip library not loaded.", true);
-            return;
-        }
-
-        if (fileInput.files.length === 0) {
-            alert("Please select a .docx file!");
-            return;
-        }
-
-        const file = fileInput.files[0];
-        status.innerText = "Processing...";
-        log("Started processing: " + file.name);
-
-        try {
-            const arrayBuffer = await file.arrayBuffer();
-            const zip = await JSZip.loadAsync(arrayBuffer);
-            log("File Unzipped successfully.");
-
-            // --- DEBUG START: फाईलमध्ये काय आहे ते तपासणे ---
-            log("Checking file structure...");
-            let foundDocXml = false;
-            let fileList = [];
-            
-            zip.forEach(function (relativePath) {
-                fileList.push(relativePath);
-                if (relativePath === "word/document.xml") {
-                    foundDocXml = true;
-                }
-            });
-
-            if (!foundDocXml) {
-                // जर मुख्य फाईल सापडली नाही, तर एरर दाखवा
-                log("CRITICAL ERROR: 'word/document.xml' not found!", true);
-                log("Files found inside zip: " + fileList.join(", "), true);
-                throw new Error("This is not a valid .docx file structure.");
-            } else {
-                log("Structure OK: Found 'word/document.xml'");
-            }
-            // --- DEBUG END ---
-
-            const docXml = await zip.file("word/document.xml").async("string");
-            log("Read document content successfully.");
-
-            const parser = new DOMParser();
-            const xmlDoc = parser.parseFromString(docXml, "text/xml");
-            const textNodes = xmlDoc.getElementsByTagName("w:t");
-
-            log(`Converting ${textNodes.length} text fragments...`);
-            let changeCount = 0;
-
-            for (let i = 0; i < textNodes.length; i++) {
-                const original = textNodes[i].textContent;
-                if(!original || original.trim() === "") continue;
-                const converted = convertText(original);
-                if(original !== converted) {
-                    textNodes[i].textContent = converted;
-                    changeCount++;
-                }
-            }
-            log(`Converted ${changeCount} lines.`);
-
-            const serializer = new XMLSerializer();
-            const newDocXml = serializer.serializeToString(xmlDoc);
-            zip.file("word/document.xml", newDocXml);
-
-            const newContent = await zip.generateAsync({ type: "blob" });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(newContent);
-            link.download = "Converted_" + file.name;
-            link.click();
-
-            status.innerText = "Success! File downloaded.";
-            log("Download started successfully.");
-
-        } catch (err) {
-            log("Error: " + err.message, true);
-            status.innerText = "Failed!";
-            alert("Failed: " + err.message);
-        }
-    }
     </script>
 </body>
 </html>
