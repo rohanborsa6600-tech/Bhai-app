@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi Final V5</title>
+    <title>ShreeLipi Stable V6</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f6f8; text-align: center; padding: 20px; }
+        body { font-family: -apple-system, sans-serif; background: #f8f9fa; text-align: center; padding: 20px; }
         .card { background: white; max-width: 650px; margin: 30px auto; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         h2 { color: #333; margin-bottom: 5px; }
         p { color: #666; font-size: 14px; margin-bottom: 25px; }
@@ -21,7 +21,7 @@
         input[type="file"] { display: none; }
 
         button {
-            background: #007aff; color: white; border: none; padding: 15px; width: 100%;
+            background: #28a745; color: white; border: none; padding: 15px; width: 100%;
             border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer;
         }
         button:disabled { background: #ccc; cursor: not-allowed; }
@@ -29,12 +29,13 @@
         #status { margin-top: 15px; font-size: 14px; color: #333; font-weight: 500; }
         #fileName { margin-bottom: 15px; color: #555; }
 
+        /* Report Box */
         #reportBox {
-            margin-top: 25px; text-align: left; background: #fff5f5; 
-            border: 1px solid #ffcccc; border-radius: 10px; padding: 15px; display: none;
+            margin-top: 25px; text-align: left; background: #fff3cd; 
+            border: 1px solid #ffeeba; border-radius: 10px; padding: 15px; display: none;
         }
         #wordList { 
-            font-family: monospace; font-size: 13px; color: #c7254e; 
+            font-family: monospace; font-size: 13px; color: #856404; 
             max-height: 150px; overflow-y: auto; background: white; 
             padding: 10px; border: 1px solid #eee; border-radius: 6px;
         }
@@ -43,8 +44,8 @@
 <body>
 
     <div class="card">
-        <h2>Word to Word (Mega Fix V5)</h2>
-        <p>Fixed: G->ज, L->ड, v->ै, {->ि and more.</p>
+        <h2>Word to Word (Stable V6)</h2>
+        <p>Restored Working Logic + Added Report Feature.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Select Word File (.docx)
@@ -56,75 +57,73 @@
         <div id="status"></div>
 
         <div id="reportBox">
-            <div style="color: #d9534f; font-weight: bold; margin-bottom: 5px;">⚠️ Unconverted Words:</div>
+            <div style="color: #856404; font-weight: bold; margin-bottom: 5px;">⚠️ Check these words (Unconverted):</div>
             <div id="wordList"></div>
         </div>
     </div>
 
     <script>
-        // --- 1. EXTENDED MAPPING ARRAYS (Added G, L, v, x based on your report) ---
-        const shree_extras = ['G', 'L', 'v', 'x', '%', '=', '(', ')', 'µ', 'À', 'Þ'];
-        const uni_extras   = ['ज', 'ड', 'ै',  'ॅ', 'ॄ', '.', '(', ')', '॰', 'ï', 'श्र'];
+        // --- 1. MAPPING DATA (Standard + New Fixes) ---
+        // V4 ची यादी + तुमचे रिपोर्टमधील शब्द (G, L, v, x)
+        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ', 
+        // NEW ADDITIONS
+        'G', 'L', 'v', 'x', '%', '=', '(', ')'];
+        
+        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
+        // NEW MAPPINGS
+        'ज', 'ड', 'ै', 'ॅ', 'ॄ', '.', '(', ')'];
 
-        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>'];
-        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।',''];
-
-        // Combine arrays
-        const full_shree = [...shreelipi_list, ...shree_extras];
-        const full_uni = [...unicode_list, ...uni_extras];
-
+        // --- 2. RESTORED STABLE LOGIC (From V4) ---
         function convertText(inputText) {
             if (!inputText) return "";
-            let res = inputText;
-
-            // --- PRIORITY FIXES (Run before mapping) ---
             
-            // 1. FIX: '{' Matra ({वचार -> विचार)
-            // We run this loop carefully to catch { before it gets mapped to something else
-            let parts = res.split("{");
-            if (parts.length > 1) {
-                let newRes = parts[0];
-                for(let i=1; i<parts.length; i++) {
-                    let fragment = parts[i];
-                    if(fragment.length > 0) {
-                        // Take first char, append Matra, append rest
-                        let firstChar = fragment.charAt(0);
-                        let rest = fragment.substring(1);
-                        // Check if firstChar is a valid consonant to attach matra
-                        if(firstChar !== ' ' && firstChar !== '©') {
-                             newRes += firstChar + "ि" + rest;
-                        } else {
-                             newRes += "{" + fragment; // Put back if invalid
-                        }
-                    } else {
-                        newRes += "{"; // Empty fragment means consecutive {{
+            let res = inputText; 
+
+            // A. Basic Mapping Replacement
+            for (let i = 0; i < shreelipi_list.length; i++) {
+                if (shreelipi_list[i] && unicode_list[i]) {
+                    res = res.split(shreelipi_list[i]).join(unicode_list[i]);
+                }
+            }
+
+            // B. FIX: '{' Matra ({वचार -> विचार)
+            // Using the safe 'while' loop from V4
+            let pos_curly = res.indexOf("{");
+            while (pos_curly !== -1) {
+                if (pos_curly + 1 < res.length) {
+                    let next_char = res.charAt(pos_curly + 1);
+                    if (next_char !== ' ' && next_char !== '©') { 
+                        let target = "{" + next_char;
+                        res = res.replace(target, next_char + "ि");
                     }
                 }
-                res = newRes;
+                pos_curly = res.indexOf("{", pos_curly + 1);
             }
 
-            // --- MAIN MAPPING ---
-            for (let i = 0; i < full_shree.length; i++) {
-                if (full_shree[i] && full_uni[i]) {
-                    res = res.split(full_shree[i]).join(full_uni[i]);
-                }
-            }
-
-            // --- POST FIXES ---
-
-            // 2. FIX: 'o' Matra (Standard)
+            // C. FIX: 'o' Matra
             let pos_o = res.indexOf("o");
             while (pos_o !== -1) {
                 if (pos_o + 1 < res.length) {
-                    let next = res.charAt(pos_o + 1);
-                    if (next !== ' ' && next !== '्') {
-                        res = res.replace("o" + next, next + "ि");
+                    let next_char = res.charAt(pos_o + 1);
+                    if (next_char !== ' ' && next_char !== '्') {
+                        let target = "o" + next_char;
+                        res = res.replace(target, next_char + "ि");
                     }
                 }
                 pos_o = res.indexOf("o", pos_o + 1);
             }
 
-            // 3. FIX: 'q' -> 'o'
+            // D. FIX: Half Letter Velaanti
+            let pos_half = res.indexOf("ि्");
+            while (pos_half !== -1) {
+                if (pos_half + 2 < res.length) {
+                    let cons = res.charAt(pos_half + 2);
+                    res = res.replace("ि्" + cons, "्" + cons + "ि");
+                }
+                pos_half = res.indexOf("ि्", pos_half + 2);
+            }
+
+            // E. FIX: 'q' -> 'o'
             let pos_q = res.indexOf("q");
             while (pos_q !== -1) {
                  if (pos_q + 1 < res.length) {
@@ -134,16 +133,7 @@
                  pos_q = res.indexOf("q", pos_q + 1);
             }
 
-            // 4. FIX: Half Letter Matras
-            let pos_half = res.indexOf("ि्");
-            while (pos_half !== -1) {
-                if (pos_half + 2 < res.length) {
-                    let cons = res.charAt(pos_half + 2);
-                    res = res.replace("ि्" + cons, "्" + cons + "ि");
-                }
-                pos_half = res.indexOf("ि्", pos_half + 2);
-            }
-            
+            // F. FIX: 'o' + Halant
             let pos_oh = res.indexOf("o्");
             while (pos_oh !== -1) {
                 if (pos_oh + 2 < res.length) {
@@ -156,13 +146,16 @@
             // Cleanup
             res = res.replace(/o/g, "िं");
 
-            // 5. Reph (Rafar) © -> र्
+            // G. Reph (Rafar) © -> र्
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
                 let prob = pos_reph - 1;
-                while (prob >= 0 && matras.includes(res.charAt(prob))) prob--;
+                while (prob >= 0 && matras.includes(res.charAt(prob))) {
+                    prob--;
+                }
                 if (prob < 0) prob = 0;
+                
                 let chunk = res.substring(prob, pos_reph);
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
                 pos_reph = res.indexOf("©", prob + chunk.length + 2);
@@ -171,7 +164,7 @@
             return res;
         }
 
-        // --- REPORT LOGIC ---
+        // --- 3. REPORT LOGIC (From V5) ---
         function analyzeUnconverted(text) {
             const words = text.split(/\s+/);
             const unconvertedSet = new Set();
@@ -187,7 +180,7 @@
             return Array.from(unconvertedSet);
         }
 
-        // --- UI HANDLERS ---
+        // --- 4. UI HANDLERS ---
         const fileInput = document.getElementById('fileInput');
         const convertBtn = document.getElementById('convertBtn');
         const fileNameDiv = document.getElementById('fileName');
@@ -209,7 +202,7 @@
             let fullText = "";
 
             try {
-                if (typeof JSZip === 'undefined') throw new Error("Check Internet.");
+                if (typeof JSZip === 'undefined') throw new Error("Check Internet Connection.");
                 const file = fileInput.files[0];
                 const arrayBuffer = await file.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
@@ -229,12 +222,12 @@
                     }
                 }
 
-                // Report
+                // Show Report
                 const missing = analyzeUnconverted(fullText);
                 if (missing.length > 0) {
                     reportBox.style.display = "block";
                     wordListDiv.innerText = missing.join(", ");
-                    statusDiv.innerText = "⚠️ Done, but check unconverted words.";
+                    statusDiv.innerText = "Done! Review the list below.";
                     statusDiv.style.color = "orange";
                 } else {
                     statusDiv.innerText = "Success! 100% Converted.";
@@ -255,6 +248,8 @@
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done!";
+                setTimeout(() => convertBtn.disabled = false, 2000);
+
             } catch (err) {
                 alert("Error: " + err.message);
                 convertBtn.innerText = "Try Again";
