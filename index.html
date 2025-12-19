@@ -3,213 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Docx Converter Final</title>
+    <title>ShreeLipi Docx Fixed</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #eef2f3; text-align: center; }
-        .box { background: white; max-width: 500px; margin: 20px auto; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background: #f2f2f7; text-align: center; }
+        .box { background: white; max-width: 500px; margin: 30px auto; padding: 30px; border-radius: 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         
-        /* Status Indicators */
-        .status-dot { height: 12px; width: 12px; background-color: #bbb; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .ready { background-color: #28a745; } /* Green */
-        .error { background-color: #dc3545; } /* Red */
-
-        /* File Input Styling */
+        h2 { margin-top: 0; color: #1c1c1e; }
+        
+        .upload-btn {
+            display: block; padding: 20px; border: 2px dashed #007aff; background: #f0f8ff;
+            color: #007aff; border-radius: 12px; font-weight: 600; cursor: pointer; margin: 20px 0;
+        }
         input[type="file"] { display: none; }
-        .custom-upload { 
-            display: block; padding: 15px; border: 2px dashed #007bff; color: #007bff; 
-            border-radius: 10px; cursor: pointer; margin-bottom: 20px; font-weight: bold;
-        }
-        .custom-upload:hover { background: #f0f8ff; }
 
-        button { 
-            background: #28a745; color: white; border: none; padding: 15px 30px; 
-            font-size: 18px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px;
+        button {
+            background: #007aff; color: white; border: none; padding: 16px; width: 100%;
+            border-radius: 12px; font-size: 17px; font-weight: 600; cursor: pointer;
         }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button:disabled { background: #d1d1d6; color: #8e8e93; }
 
-        #logArea { 
-            margin-top: 20px; text-align: left; background: #222; color: #0f0; 
-            padding: 15px; font-family: monospace; font-size: 12px; 
-            border-radius: 8px; min-height: 100px; max-height: 200px; overflow-y: auto; 
-        }
+        #status { margin-top: 15px; font-size: 14px; color: #3a3a3c; }
     </style>
 </head>
 <body>
 
     <div class="box">
-        <h2>ShreeLipi to Unicode</h2>
+        <h2>Docx Converter</h2>
         
-        <div style="margin-bottom: 15px; font-size: 14px;">
-            <span id="libStatusDot" class="status-dot"></span> 
-            <span id="libStatusText">Checking System...</span>
-        </div>
-
-        <label for="fileInput" class="custom-upload">
-            📄 Tap here to Select .docx File
+        <label for="fileInput" class="upload-btn">
+            Select Word File (.docx)
         </label>
-        <input type="file" id="fileInput" accept=".docx">
+        <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
         
-        <div id="fileName" style="margin-bottom: 15px; color: #555;">No file selected</div>
+        <div id="fileName" style="margin-bottom: 20px; color: #8e8e93;">No file selected</div>
 
-        <button id="convertBtn" disabled>Convert Now</button>
+        <button id="convertBtn" disabled>Convert to Unicode</button>
         
-        <div id="logArea">Waiting for action...</div>
+        <p id="status"></p>
     </div>
 
     <script>
-        // --- 1. SETUP & UTILS ---
-        const logBox = document.getElementById('logArea');
         const fileInput = document.getElementById('fileInput');
         const fileNameDisplay = document.getElementById('fileName');
         const convertBtn = document.getElementById('convertBtn');
-        const libDot = document.getElementById('libStatusDot');
-        const libText = document.getElementById('libStatusText');
+        const status = document.getElementById('status');
 
-        function log(msg, isError = false) {
-            const color = isError ? '#ff4444' : '#00ff00';
-            const time = new Date().toLocaleTimeString();
-            logBox.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
-            logBox.scrollTop = logBox.scrollHeight;
-            console.log(msg);
-        }
-
-        // --- 2. INITIALIZATION CHECK ---
-        window.onload = function() {
-            if (typeof JSZip !== 'undefined') {
-                libDot.classList.add('ready');
-                libText.innerText = "System Ready (JSZip Loaded)";
-                log("System Initialized.");
-            } else {
-                libDot.classList.add('error');
-                libText.innerText = "Error: Internet Required!";
-                log("Error: JSZip library failed to load.", true);
-                alert("Please connect to Internet to load the converter library.");
-            }
-        };
-
-        // --- 3. EVENT LISTENERS ---
+        // 1. File Selection
         fileInput.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
-                fileNameDisplay.innerText = "Selected: " + this.files[0].name;
+                fileNameDisplay.innerText = this.files[0].name;
                 convertBtn.disabled = false;
-                convertBtn.style.opacity = "1";
-                log("File selected: " + this.files[0].name);
-            } else {
-                fileNameDisplay.innerText = "No file selected";
-                convertBtn.disabled = true;
+                status.innerText = "";
             }
         });
 
-        convertBtn.addEventListener('click', processDocx);
-
-        // --- 4. CONVERSION LOGIC (Pure Function) ---
-        // (तुमचे जुने लॉजिक इथे शॉर्ट केले आहे, पण पूर्ण काम करेल)
+        // 2. Conversion Logic (Clean & Fast)
         const shree = ['u','ª','}','n','p','H','·','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','\\','â','[','ß','^','ä',']','ã','_','å','`','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Am{','Am|','Am','A','B©','B','C','D','E{','E','F','m°','m{','m|','{','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ'];
         const uni = ['©','©ं','{©','o','o',"क",'क्‌',"ख",'ख्‌',"ग",'ग्',"घ",'च','च्‌','छ','ज़','ज','ज़्‌','ज्‌','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्‌',"प",'प्‌',"भ",'भ्',"ब",'ब्‌',"म",'म्',"य","र","ल",'ल्‌',"व",'व्‌',"श",'श्','श्',"ष",'ष्‌',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्‌','दृ','्र','रु','रू','।','','',''];
 
         function convertString(txt) {
             if (!txt) return "";
             let res = txt;
-            // Basic Swap
             for(let i=0; i<shree.length; i++) {
                 if(shree[i] && uni[i]) res = res.split(shree[i]).join(uni[i]);
             }
             // Fixes
-            // 'i' Matra (o -> ि) - Simple Loop
             while(res.includes("o")) {
                 let idx = res.indexOf("o");
                 if(idx < res.length-1) {
                     let next = res.charAt(idx+1);
                     res = res.substring(0, idx) + next + "ि" + res.substring(idx+2);
-                } else {
-                    res = res.replace("o", "िं"); // End case
-                }
+                } else { res = res.replace("o", "िं"); }
             }
-            res = res.replace(/o/g, "िं"); // Cleanup
+            res = res.replace(/o/g, "िं");
             
-            // Reph (Rafar)
             const matras = "ािीुूृेैोौंःँॅ";
             let rIdx = res.indexOf("©");
             while(rIdx > 0) {
                 let p = rIdx - 1;
                 while(p >= 0 && matras.includes(res.charAt(p))) p--;
                 if(p < 0) p = 0;
-                
                 let chunk = res.substring(p, rIdx);
                 res = res.substring(0, p) + "र्" + chunk + res.substring(rIdx+1);
-                rIdx = res.indexOf("©", p + chunk.length + 2); // Search next
+                rIdx = res.indexOf("©", p + chunk.length + 2);
             }
             return res;
         }
 
-        // --- 5. MAIN PROCESS ---
-        async function processDocx() {
+        // 3. Main Process
+        convertBtn.addEventListener('click', async () => {
             if (!fileInput.files.length) return;
             
-            const file = fileInput.files[0];
-            log("Reading file: " + file.name);
             convertBtn.disabled = true;
             convertBtn.innerText = "Processing...";
-
+            
             try {
+                if (typeof JSZip === 'undefined') throw new Error("Internet disconnected. Reload.");
+
+                const file = fileInput.files[0];
                 const data = await file.arrayBuffer();
                 const zip = await JSZip.loadAsync(data);
                 
-                // Validate Docx
-                if (!zip.file("word/document.xml")) {
-                    throw new Error("Invalid .docx file! (word/document.xml missing)");
-                }
-                log("File structure OK.");
+                if (!zip.file("word/document.xml")) throw new Error("Invalid Docx file.");
 
                 const docXml = await zip.file("word/document.xml").async("string");
-                
-                // Parse XML
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(docXml, "text/xml");
                 const textNodes = xmlDoc.getElementsByTagName("w:t");
-                
-                log(`Found ${textNodes.length} text fragments.`);
-                
-                // Convert
-                let count = 0;
+
                 for (let i = 0; i < textNodes.length; i++) {
                     let original = textNodes[i].textContent;
                     if(original && original.trim().length > 0) {
                         textNodes[i].textContent = convertString(original);
-                        count++;
                     }
                 }
-                log(`Converted ${count} fragments.`);
 
-                // Re-pack
                 const serializer = new XMLSerializer();
                 const newXml = serializer.serializeToString(xmlDoc);
                 zip.file("word/document.xml", newXml);
-                
-                const blob = await zip.generateAsync({type:"blob"});
-                
+
+                // --- KEY FIX FOR IPAD (DOCX MIME TYPE) ---
+                const blob = await zip.generateAsync({
+                    type: "blob",
+                    mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                });
+
                 // Download
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Converted_" + file.name;
+                // Force .docx extension
+                a.download = "Converted_" + file.name.replace(".docx", "") + ".docx";
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                
-                log("Download started!");
-                convertBtn.innerText = "Done! Convert Another";
-                
+
+                status.innerText = "Success! Check your Downloads folder.";
+                convertBtn.innerText = "Convert Another";
+
             } catch (err) {
-                log("Error: " + err.message, true);
-                alert("Failed: " + err.message);
+                alert("Error: " + err.message);
+                status.innerText = "Failed.";
                 convertBtn.innerText = "Try Again";
             } finally {
                 convertBtn.disabled = false;
             }
-        }
+        });
     </script>
 </body>
 </html>
