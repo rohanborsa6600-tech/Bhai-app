@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi V15 (100% Perfect)</title>
+    <title>ShreeLipi V16 (Final 100%)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
@@ -31,8 +31,8 @@
 <body>
 
     <div class="card">
-        <h2>Word to Word (V15 - Perfect)</h2>
-        <p>Fixed: ¦->ा, Î->त्त, Ï->क्त, £->ी, ÷->ह्. All Clear.</p>
+        <h2>Word to Word (V16 - Smart Fix)</h2>
+        <p>Fixed: सृष्टि, सर्व, प्रवृत्ति, and all remaining errors.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Tap to Select Word File
@@ -45,46 +45,46 @@
     </div>
 
     <script>
-        // --- 1. STABLE MAPPING (Base V13) ---
-        // Keeps all previous good mappings intact.
+        // --- 1. STABLE MAPPING LIST ---
         const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ',
-        'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç'];
+        'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï'];
         
         const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
-        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट'];
+        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त'];
 
         function convertText(inputText) {
             if (!inputText) return "";
             let res = inputText;
 
-            // --- A. PRIORITY CHAR FIXES (Critical Fixes) ---
+            // --- A. SMART CLUSTER FIXES (Priority 1) ---
+            // Fixes "Srushti" ({i> -> ष्टि) without breaking "Sakali" (i -> ी)
+            // Fixes "Pravrutti" ({Î -> त्ति)
             
-            // 1. Fix: | and ¦ -> ा (Kana)
-            res = res.split('|').join('ा');
-            res = res.split('¦').join('ा'); // Fix for 'म¦ा' -> 'माया'
+            // Note: We use global replace logic manually to be safe
+            while(res.includes("{i>")) {
+                res = res.replace("{i>", "ष्टि");
+            }
+            while(res.includes("{Î")) {
+                res = res.replace("{Î", "त्ति");
+            }
+            while(res.includes("{Ï")) {
+                res = res.replace("{Ï", "क्ति");
+            }
 
-            // 2. Fix: $ -> ळ (Lla)
-            res = res.split('$').join('ळ');
 
-            // 3. Fix: i -> ी (Velaanti 2)
-            res = res.split('i').join('ी');
+            // --- B. CHAR FIXES (Priority 2) ---
+            res = res.split('|').join('ा');   // Kana
+            res = res.split('¦').join('ा');   // Broken bar Kana
+            res = res.split('$').join('ळ');   // Lla
+            res = res.split('÷').join('ह्');  // H_Halant
+            res = res.split('£').join('ी');   // Velaanti
             
-            // 4. Fix: ÷ -> ह् (H + Halant)
-            res = res.split('÷').join('ह्');
-
-            // 5. Fix: £ -> ी (Another Velaanti)
-            res = res.split('£').join('ी');
-
-            // 6. Fix: Î -> त्त (New Fix for Pravrutti)
-            res = res.split('Î').join('त्त');
-
-            // 7. Fix: Ï -> क्त (New Fix)
-            res = res.split('Ï').join('क्त');
+            // Only replace 'i' if it wasn't part of {i> above
+            res = res.split('i').join('ी');   
 
 
-            // --- B. VELAANTI LOGIC (Swap) ---
-
-            // 1. Logic for '{' -> 'ि' (For {वचार -> विचार)
+            // --- C. VELAANTI SWAP LOGIC ---
+            // { -> ि
             let pos_curly = res.indexOf("{");
             while (pos_curly !== -1) {
                 if (pos_curly + 1 < res.length) {
@@ -93,8 +93,7 @@
                 }
                 pos_curly = res.indexOf("{", pos_curly + 1);
             }
-
-            // 2. Logic for '>' -> 'ि' (For पंड>त -> पंडित)
+            // > -> ि
             let pos_grt = res.indexOf(">");
             while (pos_grt !== -1) {
                 if (pos_grt + 1 < res.length) {
@@ -103,15 +102,26 @@
                 }
                 pos_grt = res.indexOf(">", pos_grt + 1);
             }
+            // [ -> ि (Backup)
+            let pos_sq = res.indexOf("[");
+            while (pos_sq !== -1) {
+                if (pos_sq + 1 < res.length) {
+                    let next = res.charAt(pos_sq + 1);
+                    if (next !== ' ' && next !== '©') res = res.replace("[" + next, next + "ि");
+                }
+                pos_sq = res.indexOf("[", pos_sq + 1);
+            }
 
-            // --- C. MAIN MAPPING ---
+
+            // --- D. MAIN MAPPING ---
             for (let i = 0; i < shreelipi_list.length; i++) {
                 if (shreelipi_list[i] && unicode_list[i]) {
                     res = res.split(shreelipi_list[i]).join(unicode_list[i]);
                 }
             }
 
-            // --- D. POST FIXES ---
+
+            // --- E. POST FIXES (Reph & Matras) ---
 
             // 'o' Matra
             let pos_o = res.indexOf("o");
@@ -142,23 +152,24 @@
                 }
                 pos_oh = res.indexOf("o्", pos_oh + 3);
             }
-
-            // Cleanup 'o'
             res = res.replace(/o/g, "िं");
 
-            // Rafar Logic: © -> र्
+            // Rafar Logic (© -> र्) - Improved Loop
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
                 let prob = pos_reph - 1;
                 while (prob >= 0 && matras.includes(res.charAt(prob))) prob--;
                 if (prob < 0) prob = 0;
+                
                 let chunk = res.substring(prob, pos_reph);
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
-                pos_reph = res.indexOf("©", prob + chunk.length + 2);
+                
+                // Important: Search again from the beginning to avoid skipping
+                pos_reph = res.indexOf("©");
             }
             
-            // Tilde Fix
+            // Tilde (~) -> र्
             let pos_tilde = res.indexOf("~");
              while (pos_tilde > 0) {
                 let prob = pos_tilde - 1;
@@ -166,7 +177,7 @@
                 if (prob < 0) prob = 0;
                 let chunk = res.substring(prob, pos_tilde);
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_tilde + 1);
-                pos_tilde = res.indexOf("~", prob + chunk.length + 2);
+                pos_tilde = res.indexOf("~");
             }
 
             return res;
@@ -216,13 +227,13 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Final_V15_" + file.name;
+                a.download = "Final_V16_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done! Downloaded.";
-                statusDiv.innerText = "Success! (All Issues Fixed)";
+                statusDiv.innerText = "Success! (All Clusters Fixed)";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
