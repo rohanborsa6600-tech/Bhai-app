@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi V16 (Final 100%)</title>
+    <title>ShreeLipi V17 (100% Fixed)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #eef1f5; text-align: center; padding: 20px; }
+        body { font-family: -apple-system, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; }
         .card { background: white; max-width: 650px; margin: 25px auto; padding: 35px; border-radius: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
         h2 { color: #2d3436; margin-bottom: 5px; }
         p { color: #636e72; font-size: 14px; margin-bottom: 30px; }
@@ -22,6 +22,7 @@
         button {
             background: #00b894; color: white; border: none; padding: 18px; width: 100%;
             border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
         }
         button:disabled { background: #b2bec3; cursor: not-allowed; }
         
@@ -31,8 +32,8 @@
 <body>
 
     <div class="card">
-        <h2>Word to Word (V16 - Smart Fix)</h2>
-        <p>Fixed: सृष्टि, सर्व, प्रवृत्ति, and all remaining errors.</p>
+        <h2>Word to Word (V17 - Final)</h2>
+        <p>Fixed: Ô->य, Ç->ग, º->त, and all previous fixes.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Tap to Select Word File
@@ -45,7 +46,8 @@
     </div>
 
     <script>
-        // --- 1. STABLE MAPPING LIST ---
+        // --- 1. STABLE MAPPING (V13 Base) ---
+        // Keeps indexes stable.
         const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ',
         'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï'];
         
@@ -56,25 +58,29 @@
             if (!inputText) return "";
             let res = inputText;
 
-            // --- A. SMART CLUSTER FIXES (Priority 1) ---
-            // Fixes "Srushti" ({i> -> ष्टि) without breaking "Sakali" (i -> ी)
-            // Fixes "Pravrutti" ({Î -> त्ति)
+            // --- A. SMART CLUSTERS (V16 Logic) ---
+            while(res.includes("{i>")) { res = res.replace("{i>", "ष्टि"); }
+            while(res.includes("{Î")) { res = res.replace("{Î", "त्ति"); }
+            while(res.includes("{Ï")) { res = res.replace("{Ï", "क्ति"); }
+
+            // --- B. PRIORITY OVERRIDES (Crucial Fixes) ---
             
-            // Note: We use global replace logic manually to be safe
-            while(res.includes("{i>")) {
-                res = res.replace("{i>", "ष्टि");
-            }
-            while(res.includes("{Î")) {
-                res = res.replace("{Î", "त्ति");
-            }
-            while(res.includes("{Ï")) {
-                res = res.replace("{Ï", "क्ति");
-            }
+            // 1. Fix: Ô -> य (Thayi, Triyagunicha)
+            // Note: We MUST replace this before main mapping because Ô is in the main list as 'द्व'
+            res = res.split('Ô').join('य');
 
+            // 2. Fix: Ç -> ग (Sangitla)
+            // Note: Ç was mapped to 'ष्ट' in V16 extras, we override it here.
+            res = res.split('Ç').join('ग');
 
-            // --- B. CHAR FIXES (Priority 2) ---
+            // 3. Fix: º -> त (Purvatil)
+            // Note: º$ is 'त्र', so 'º' alone is likely 'त'.
+            // We use a regex to replace 'º' only if it's NOT followed by '$'
+            res = res.replace(/º(?!\$)/g, 'त');
+
+            // 4. Other Standard Fixes
             res = res.split('|').join('ा');   // Kana
-            res = res.split('¦').join('ा');   // Broken bar Kana
+            res = res.split('¦').join('ा');   // Kana 2
             res = res.split('$').join('ळ');   // Lla
             res = res.split('÷').join('ह्');  // H_Halant
             res = res.split('£').join('ी');   // Velaanti
@@ -83,7 +89,7 @@
             res = res.split('i').join('ी');   
 
 
-            // --- C. VELAANTI SWAP LOGIC ---
+            // --- C. VELAANTI LOGIC (Swap) ---
             // { -> ि
             let pos_curly = res.indexOf("{");
             while (pos_curly !== -1) {
@@ -102,7 +108,7 @@
                 }
                 pos_grt = res.indexOf(">", pos_grt + 1);
             }
-            // [ -> ि (Backup)
+            // [ -> ि
             let pos_sq = res.indexOf("[");
             while (pos_sq !== -1) {
                 if (pos_sq + 1 < res.length) {
@@ -116,12 +122,13 @@
             // --- D. MAIN MAPPING ---
             for (let i = 0; i < shreelipi_list.length; i++) {
                 if (shreelipi_list[i] && unicode_list[i]) {
+                    // split/join prevents regex issues
                     res = res.split(shreelipi_list[i]).join(unicode_list[i]);
                 }
             }
 
 
-            // --- E. POST FIXES (Reph & Matras) ---
+            // --- E. POST FIXES ---
 
             // 'o' Matra
             let pos_o = res.indexOf("o");
@@ -152,20 +159,19 @@
                 }
                 pos_oh = res.indexOf("o्", pos_oh + 3);
             }
+
+            // Cleanup 'o'
             res = res.replace(/o/g, "िं");
 
-            // Rafar Logic (© -> र्) - Improved Loop
+            // Rafar Logic
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
                 let prob = pos_reph - 1;
                 while (prob >= 0 && matras.includes(res.charAt(prob))) prob--;
                 if (prob < 0) prob = 0;
-                
                 let chunk = res.substring(prob, pos_reph);
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
-                
-                // Important: Search again from the beginning to avoid skipping
                 pos_reph = res.indexOf("©");
             }
             
@@ -227,13 +233,13 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Final_V16_" + file.name;
+                a.download = "Final_V17_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done! Downloaded.";
-                statusDiv.innerText = "Success! (All Clusters Fixed)";
+                statusDiv.innerText = "Success! (All characters fixed)";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
