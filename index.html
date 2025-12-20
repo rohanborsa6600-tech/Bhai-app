@@ -3,38 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi Final V11</title>
+    <title>ShreeLipi Mega Converter (V12)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f2f4f8; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 650px; margin: 30px auto; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h2 { color: #222; margin-bottom: 10px; }
-        p { color: #666; font-size: 15px; margin-bottom: 30px; }
+        body { font-family: -apple-system, sans-serif; background: #eef2f5; text-align: center; padding: 20px; }
+        .card { background: white; max-width: 650px; margin: 20px auto; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h2 { color: #2c3e50; margin-bottom: 5px; }
+        p { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
         
         .upload-area {
-            border: 2px dashed #007aff; background: #f7fbff; color: #007aff;
-            padding: 40px; border-radius: 15px; font-weight: 600; cursor: pointer;
-            display: block; margin-bottom: 25px; transition: 0.3s;
+            border: 2px dashed #3498db; background: #f0f8ff; color: #2980b9;
+            padding: 35px; border-radius: 12px; font-weight: 600; cursor: pointer;
+            display: block; margin-bottom: 20px;
         }
-        .upload-area:hover { background: #eef7ff; border-color: #0056b3; }
         input[type="file"] { display: none; }
 
         button {
-            background: #28a745; color: white; border: none; padding: 18px; width: 100%;
-            border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(40,167,69,0.3);
+            background: #27ae60; color: white; border: none; padding: 16px; width: 100%;
+            border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer;
         }
-        button:disabled { background: #d1d1d6; cursor: not-allowed; box-shadow: none; }
+        button:disabled { background: #bdc3c7; cursor: not-allowed; }
         
-        #status { margin-top: 20px; font-size: 15px; font-weight: 500; }
+        #status { margin-top: 15px; font-size: 15px; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Word to Word (V11 - Final Polish)</h2>
-        <p>Fixed: ÷ -> ह्, £ -> ी, $ -> ळ, and more.</p>
+        <h2>Word to Word (V12 - Mega Mapping)</h2>
+        <p>Includes Jodakshare (क्क, द्ध, श्र) + Special Fixes.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Select Word File (.docx)
@@ -47,39 +45,66 @@
     </div>
 
     <script>
-        // --- 1. STABLE MAPPING ---
-        // V10 list (Correct Base) - We keep this intact to avoid shifting
-        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ',
-        'G', 'L', 'v', 'x', '%', '=', '(', ')'];
-        
-        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
-        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')'];
+        // --- 1. THE MEGA LIST (Sorted by Priority automatically in logic) ---
+        // Format: [ShreeLipi_Code, Unicode]
+        const mapping_db = [
+            // SPECIAL / PUNCTUATION
+            ['…', 'ः'], ['b', 'ल'], ['ÿ', 'ू'], ['Ä', 'ञ्'], ['@', 'ऽ'], ['Q´', 'ट्र'],
+            ['u', '©'], ['ª', '©ं'], ['}', '{©'], ['[', '{'], ['p', 'क'], ['H', 'क्'],
+            ['³', 'ख'], ['I', 'ख्'], ['»', 'ग'], ['J', 'ग्'], ['½', 'घ'], ['K', 'च'],
+            ['M', 'च्'], ['À', 'छ'], ['N', 'ज़'], ['µO', 'ज'], ['O', 'ज़्'], ['µÁ', 'ज्'],
+            ['Á', 'झ'], ['P', 'ट'], ['Q', 'ठ'], ['R', 'ड़'], ['¶S', 'ड'], ['S', 'ढ़'],
+            ['¶T', 'ढ'], ['T', 'ण'], ['U', 'ण्'], ['Ê', 'थ'], ['W', 'थ्'], ['Ï', 'त'],
+            ['V', 'त्'], ['Ë', 'ध'], ['Y', 'ध्'], ['Ü', 'द'], ['X', 'न'], ['Z', 'न्'],
+            ['Ý', 'फ'], ['’', 'फ्'], ['â', 'प'], ['n', 'प्'], ['ß', 'भ'], ['^', 'भ्'],
+            ['ä', 'ब'], ['~', 'ब्'], ['ã', 'म'], ['‘', 'म्'], ['å', 'य'], ['¶', 'र'],
+            ['a', 'ल'], ['c', 'ल्'], ['ë', 'व'], ['d', 'व्'], ['ì', 'श'], ['e', 'श्'],
+            ['û', 'श्'], ['í', 'ष'], ['f', 'ष्'], ['î', 'स'], ['g', 'स्'], ['ñ', 'ह'],
+            ['h', 'क्ष'], ['j', 'क्ष्'], ['ú', 'ज्ञ'], ['k', 'द्द'], ['Ô', 'द्व'],
+            ['Û', 'द्य'], ['Ú', 'प्र'], ['à', 'न्न'], ['Þ', 'ट्र'], ['Q­', 'क्त'],
+            ['º$', 'त्र'], ['Ì', 'द्र'], ['Ð', 'द्ध'], ['Õ', 'श्र'], ['l', 'त्त'],
+            ['Îm', 'क्क'], ['¸', 'ल्ल'], ['„', 'ह्व'], ['ˆ', 'श्व'], ['œ', 'ट्ट'],
+            ['Å', 'औ'], ['Am¡', 'ओ'], ['Amo', 'ओं'], ['Am|', 'आ'], ['Am', 'अ'],
+            ['A', 'ई'], ['B©', 'इ'], ['B', 'उ'], ['C', 'ऊ'], ['D', 'ऐ'], ['Eo', 'ए'],
+            ['E', 'ऋ'], ['F', 'ॉ'], ['m°', 'ो'], ['mo', 'ों'], ['m|', 'े'], ['o', 'ें'],
+            ['|', 'ौ'], ['m¡', 'ौं'], ['m¢', 'ै'], ['¡', 'ैं'], ['¢', 'ा'], ['m', 'ी'],
+            ['r', 'ी'], ['s', 'ीं'], ['t', 'ु'], ['w', 'ु'], ['þ', 'ू'], ['y', 'ं'],
+            ['§', 'ँ'], ['±', 'ः'], ['•', 'ृ'], ['¥', '्'], ['²', 'दृ'], ['Ñ', '्र'],
+            ['«', 'रु'], ['é', 'रू'], ['ê', '।'], ['&', '।'], ['>', ''], ['µ', ''],
+            
+            // YOUR SPECIFIC FIXES (Added to DB)
+            ['$', 'ळ'], ['G', 'ज'], ['L', 'ध'], ['v', 'ै'], ['x', 'ॅ'], 
+            ['%', 'ॄ'], ['=', '.'], ['(', '('], [')', ')'], ['÷', 'ह्'], ['£', 'ी'],
+            
+            // COMMON JODAKSHARE (High Priority)
+            ['Fk', 'ष्क'], ['Fµk', 'ष्फ'], ['Fp', 'ष्प'], ['Fhm', 'ष्म'], ['Fh', 'ष्म'],
+            ['Sp', 'ष्ट'], ['Sç', 'ष्ठ'], ['nj', 'प्त'], ['nç', 'प्थ'], ['ç', 'ष्ठ'],
+            ['Ã', 'ञ्ज'], ['Î', 'क्'], ['Ï', 'क्त'], ['Ð', 'द्ध'], ['Ñ', '्र'],
+            ['Ò', 'ड्ढ'], ['Ó', 'श्र'], ['Ô', 'द्व'], ['Õ', 'श्र'], ['Ö', 'श्व'],
+            ['×', 'श्च'], ['Ø', 'ष्ट'], ['Ù', 'ष्ठ'], ['Ú', 'प्र'], ['Û', 'द्य'],
+            ['Ü', 'द'], ['Ý', 'फ'], ['Þ', 'ट्र'], ['ß', 'भ'], ['à', 'न्न'],
+            ['á', 'ल्ल्'], ['â', 'प'], ['ã', 'म'], ['ä', 'ब'], ['å', 'य'],
+            ['æ', 'र्‍'], ['ç', 'ष्ठ'], ['è', 'ष्ठ'], ['é', 'रू'], ['ê', '।'],
+            ['ë', 'व'], ['ì', 'श'], ['í', 'ष'], ['î', 'स'], ['ï', 'ह'],
+            ['ð', 'ळ'], ['ñ', 'ह'], ['ò', 'ळ'], ['ó', 'क्ष'], ['ô', 'ज्ञ']
+        ];
+
+        // Sort Mapping by Length (Desc) - IMPORTANT!
+        // This ensures 'क्क' (longer code) is replaced before 'क' (shorter code)
+        mapping_db.sort((a, b) => b[0].length - a[0].length);
 
         function convertText(inputText) {
             if (!inputText) return "";
             let res = inputText;
 
-            // --- A. PRIORITY REPLACEMENTS ---
-            
-            // 1. Fix: | -> ा (Kana)
+            // --- 0. PRE-CLEANING (Your specific quirks) ---
             res = res.split('|').join('ा');
-
-            // 2. Fix: $ -> ळ (Lla)
-            res = res.split('$').join('ळ');
-
-            // 3. Fix: i -> ी (Velaanti 2)
             res = res.split('i').join('ी');
-            
-            // 4. Fix: ÷ -> ह् (New for V11)
-            res = res.split('÷').join('ह्');
+            // $ is in the mapping list now as ळ, but split/join is safer for single chars
+            res = res.split('$').join('ळ'); 
 
-            // 5. Fix: £ -> ी (New for V11)
-            res = res.split('£').join('ी');
-
-
-            // --- B. VELAANTI SWAP LOGIC ---
-
-            // 1. Logic for '{' -> 'ि' (For {वचार -> विचार)
+            // --- 1. VELAANTI SWAP LOGIC (Specific to Matras before Chars) ---
+            // { -> ि
             let pos_curly = res.indexOf("{");
             while (pos_curly !== -1) {
                 if (pos_curly + 1 < res.length) {
@@ -88,8 +113,8 @@
                 }
                 pos_curly = res.indexOf("{", pos_curly + 1);
             }
-
-            // 2. Logic for '>' -> 'ि' (For पंड>त -> पंडित)
+            
+            // > -> ि
             let pos_grt = res.indexOf(">");
             while (pos_grt !== -1) {
                 if (pos_grt + 1 < res.length) {
@@ -99,16 +124,19 @@
                 pos_grt = res.indexOf(">", pos_grt + 1);
             }
 
-            // --- C. MAIN MAPPING ---
-            for (let i = 0; i < shreelipi_list.length; i++) {
-                if (shreelipi_list[i] && unicode_list[i]) {
-                    res = res.split(shreelipi_list[i]).join(unicode_list[i]);
+            // --- 2. MAIN MAPPING LOOP ---
+            for (let i = 0; i < mapping_db.length; i++) {
+                const shree = mapping_db[i][0];
+                const uni = mapping_db[i][1];
+                if (shree && uni) {
+                     // Using split/join handles special regex characters in ShreeLipi codes
+                     res = res.split(shree).join(uni);
                 }
             }
 
-            // --- D. POST-FIXES ---
+            // --- 3. POST-FIXES (Matra Corrections) ---
 
-            // 'o' Matra
+            // 'o' Matra (Standard)
             let pos_o = res.indexOf("o");
             while (pos_o !== -1) {
                 if (pos_o + 1 < res.length) {
@@ -116,16 +144,6 @@
                     if (next !== ' ' && next !== '्') res = res.replace("o" + next, next + "ि");
                 }
                 pos_o = res.indexOf("o", pos_o + 1);
-            }
-
-            // Half Letter Matra
-            let pos_half = res.indexOf("ि्");
-            while (pos_half !== -1) {
-                if (pos_half + 2 < res.length) {
-                    let cons = res.charAt(pos_half + 2);
-                    res = res.replace("ि्" + cons, "्" + cons + "ि");
-                }
-                pos_half = res.indexOf("ि्", pos_half + 2);
             }
 
             // 'q' -> 'o'
@@ -136,6 +154,16 @@
                     res = res.replace("q" + next, next + "o");
                  }
                  pos_q = res.indexOf("q", pos_q + 1);
+            }
+
+            // Half Letter Matra (ि् -> ्...ि)
+            let pos_half = res.indexOf("ि्");
+            while (pos_half !== -1) {
+                if (pos_half + 2 < res.length) {
+                    let cons = res.charAt(pos_half + 2);
+                    res = res.replace("ि्" + cons, "्" + cons + "ि");
+                }
+                pos_half = res.indexOf("ि्", pos_half + 2);
             }
 
             // 'o' + Halant
@@ -163,7 +191,7 @@
                 pos_reph = res.indexOf("©", prob + chunk.length + 2);
             }
             
-            // Tilde Fix (~ -> र्)
+            // Tilde (~) -> र्
             let pos_tilde = res.indexOf("~");
              while (pos_tilde > 0) {
                 let prob = pos_tilde - 1;
@@ -221,13 +249,13 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Final_" + file.name;
+                a.download = "MegaConvert_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done! Downloaded.";
-                statusDiv.innerText = "Success! Fixed: ÷ (ह्), £ (ी), $ (ळ).";
+                statusDiv.innerText = "Success! Mega Mapping Applied.";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
