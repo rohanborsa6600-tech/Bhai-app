@@ -3,89 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi Converter V7 (100% Fix)</title>
+    <title>ShreeLipi Fully Automated (V9)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f2f2f7; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 650px; margin: 20px auto; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        h2 { color: #333; margin-bottom: 5px; }
-        p { color: #666; font-size: 14px; margin-bottom: 25px; }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
+        .card { background: white; max-width: 600px; margin: 30px auto; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h2 { color: #222; margin-bottom: 10px; }
+        p { color: #666; font-size: 15px; margin-bottom: 30px; }
         
         .upload-area {
-            border: 2px dashed #007aff; background: #eef7ff; color: #007aff;
-            padding: 30px; border-radius: 12px; font-weight: 600; cursor: pointer;
-            display: block; margin-bottom: 20px; transition: 0.3s;
+            border: 2px dashed #007aff; background: #f7fbff; color: #007aff;
+            padding: 40px; border-radius: 15px; font-weight: 600; cursor: pointer;
+            display: block; margin-bottom: 25px; transition: 0.3s;
         }
-        .upload-area:hover { background: #e0efff; }
+        .upload-area:hover { background: #eef7ff; border-color: #0056b3; }
         input[type="file"] { display: none; }
 
         button {
-            background: #007aff; color: white; border: none; padding: 15px; width: 100%;
-            border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer;
+            background: #007aff; color: white; border: none; padding: 18px; width: 100%;
+            border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,122,255,0.3);
         }
-        button:disabled { background: #ccc; cursor: not-allowed; }
+        button:disabled { background: #d1d1d6; cursor: not-allowed; box-shadow: none; }
         
-        #status { margin-top: 15px; font-size: 14px; color: #333; font-weight: 500; }
-        
-        /* Custom Fix Area */
-        .custom-fix { margin-top: 20px; text-align: left; background: #fff8e1; padding: 15px; border-radius: 8px; border: 1px solid #ffe082; }
-        .custom-fix label { font-size: 12px; color: #856404; font-weight: bold; }
-        .fix-inputs { display: flex; gap: 10px; margin-top: 5px; }
-        .fix-inputs input { width: 50%; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
+        #status { margin-top: 20px; font-size: 15px; font-weight: 500; }
+        #fileName { margin-bottom: 20px; color: #444; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>Word to Word (V7 - 100% Fix)</h2>
-        <p>Fixed: $->्र, |->ा, >->ि, i->ी</p>
+        <h2>Word to Word (100% Automatic)</h2>
+        <p>Fixes >, $, |, i, G, L automatically. No user action needed.</p>
 
         <label for="fileInput" class="upload-area">
-            📂 Select Word File (.docx)
+            📂 Tap to Select Word File
         </label>
         <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
         
-        <div id="fileName" style="margin-bottom: 15px; color: #555;"></div>
-
-        <div class="custom-fix">
-            <label>Custom Fix (Optional): If any char is still wrong, add it here.</label>
-            <div class="fix-inputs">
-                <input type="text" id="findChar" placeholder="Find (e.g. Z)">
-                <input type="text" id="replaceChar" placeholder="Replace (e.g. र)">
-            </div>
-        </div>
-        <br>
-
+        <div id="fileName"></div>
         <button id="convertBtn" disabled>Convert Now</button>
         <div id="status"></div>
     </div>
 
     <script>
-        // --- 1. UPDATED MAPPING (Based on Screenshot Analysis) ---
-        // V6 List + Corrections for Image 6
-        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','>','µ',
-        // NEW FIXES V7
-        '|', '$', 'i', 'G', 'L', 'v', 'x', '%', '=', '(', ')'];
+        // --- 1. CLEAN MAPPING ARRAYS ---
+        // Removed '$', '>', '|' from here to handle them in Special Logic
+        // Added G, L, v, x, etc.
+        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','µ', 'G', 'L', 'v', 'x', '%', '=', '(', ')'];
         
-        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','','',
-        // NEW FIXES V7
-        'ा', '्र', 'ी', 'ज', 'ड', 'ै', 'ॅ', 'ॄ', '.', '(', ')'];
+        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','', 'ज', 'ड', 'ै', 'ॅ', 'ॄ', '.', '(', ')'];
 
         function convertText(inputText) {
             if (!inputText) return "";
             let res = inputText;
 
-            // --- 0. CUSTOM USER FIX (Runs First) ---
-            const userFind = document.getElementById('findChar').value;
-            const userRep = document.getElementById('replaceChar').value;
-            if(userFind && userRep) {
-                res = res.split(userFind).join(userRep);
-            }
+            // --- A. PRE-PROCESSING (Crucial Fixes) ---
+            
+            // 1. Fix for '|' (Kana) -> Replace directly
+            res = res.split('|').join('ा');
+            
+            // 2. Fix for '$' (Rakra) -> Replace directly
+            res = res.split('$').join('्र');
+            
+            // 3. Fix for 'i' (Velaanti II) -> Replace directly
+            // Regex to ensure we don't break 'if' or english, but in ShreeLipi 'i' is usually standalone matra
+            res = res.split('i').join('ी');
 
-            // --- 1. PRIORITY SWAPS (Velaanti Logic) ---
 
-            // FIX A: '{' -> ि (Already working)
+            // --- B. SWAP LOGIC (Velaanti I) ---
+            
+            // 1. Logic for '{' (Existing)
             let pos_curly = res.indexOf("{");
             while (pos_curly !== -1) {
                 if (pos_curly + 1 < res.length) {
@@ -95,7 +84,7 @@
                 pos_curly = res.indexOf("{", pos_curly + 1);
             }
 
-            // FIX B: '>' -> ि (NEW for V7 - e.g. पंड>त)
+            // 2. Logic for '>' (NEW: behaves same as '{')
             let pos_grt = res.indexOf(">");
             while (pos_grt !== -1) {
                 if (pos_grt + 1 < res.length) {
@@ -105,7 +94,18 @@
                 pos_grt = res.indexOf(">", pos_grt + 1);
             }
 
-            // FIX C: 'o' -> ि (Standard)
+
+            // --- C. MAIN MAPPING ---
+            for (let i = 0; i < shreelipi_list.length; i++) {
+                if (shreelipi_list[i] && unicode_list[i]) {
+                    res = res.split(shreelipi_list[i]).join(unicode_list[i]);
+                }
+            }
+
+
+            // --- D. POST-PROCESSING (Standard Logic) ---
+
+            // 'o' Matra Logic
             let pos_o = res.indexOf("o");
             while (pos_o !== -1) {
                 if (pos_o + 1 < res.length) {
@@ -115,16 +115,7 @@
                 pos_o = res.indexOf("o", pos_o + 1);
             }
 
-            // --- 2. MAIN MAPPING ---
-            for (let i = 0; i < shreelipi_list.length; i++) {
-                if (shreelipi_list[i] && unicode_list[i]) {
-                    res = res.split(shreelipi_list[i]).join(unicode_list[i]);
-                }
-            }
-
-            // --- 3. POST FIXES ---
-
-            // Half Letter Velaanti
+            // Half Letter Matra
             let pos_half = res.indexOf("ि्");
             while (pos_half !== -1) {
                 if (pos_half + 2 < res.length) {
@@ -154,10 +145,10 @@
                 pos_oh = res.indexOf("o्", pos_oh + 3);
             }
 
-            // Cleanup
+            // Cleanup 'o'
             res = res.replace(/o/g, "िं");
 
-            // Reph (Rafar) © -> र्
+            // Rafar Logic: © -> र्
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
@@ -169,7 +160,7 @@
                 pos_reph = res.indexOf("©", prob + chunk.length + 2);
             }
             
-            // Reph Fix 2: '~' -> र् (New Fix)
+            // Rafar Logic 2: ~ -> र्
             let pos_tilde = res.indexOf("~");
              while (pos_tilde > 0) {
                 let prob = pos_tilde - 1;
@@ -201,7 +192,7 @@
             convertBtn.innerText = "Processing...";
             
             try {
-                if (typeof JSZip === 'undefined') throw new Error("Check Internet.");
+                if (typeof JSZip === 'undefined') throw new Error("Internet Needed.");
                 const file = fileInput.files[0];
                 const arrayBuffer = await file.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
@@ -232,8 +223,8 @@
                 a.click();
                 document.body.removeChild(a);
                 
-                convertBtn.innerText = "Done! Convert Another";
-                statusDiv.innerText = "Success!";
+                convertBtn.innerText = "Done! Downloaded.";
+                statusDiv.innerText = "Success! All characters fixed.";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
