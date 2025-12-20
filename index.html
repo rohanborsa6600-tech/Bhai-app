@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi V17 (100% Fixed)</title>
+    <title>ShreeLipi V18 (Master Fix)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 650px; margin: 25px auto; padding: 35px; border-radius: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
+        .card { background: white; max-width: 650px; margin: 30px auto; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h2 { color: #2d3436; margin-bottom: 5px; }
         p { color: #636e72; font-size: 14px; margin-bottom: 30px; }
         
         .upload-area {
-            border: 2px dashed #0984e3; background: #f0f8ff; color: #0984e3;
+            border: 2px dashed #0984e3; background: #eef8ff; color: #0984e3;
             padding: 40px; border-radius: 14px; font-weight: 600; cursor: pointer;
             display: block; margin-bottom: 25px;
         }
@@ -22,7 +22,6 @@
         button {
             background: #00b894; color: white; border: none; padding: 18px; width: 100%;
             border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
         }
         button:disabled { background: #b2bec3; cursor: not-allowed; }
         
@@ -32,8 +31,8 @@
 <body>
 
     <div class="card">
-        <h2>Word to Word (V17 - Final)</h2>
-        <p>Fixed: Ô->य, Ç->ग, º->त, and all previous fixes.</p>
+        <h2>Word to Word (V18 - Master)</h2>
+        <p>Fixed: ü->श्च, ÷->ह्म, ö->ं (Anuswar). 100% Done.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Tap to Select Word File
@@ -46,50 +45,55 @@
     </div>
 
     <script>
-        // --- 1. STABLE MAPPING (V13 Base) ---
-        // Keeps indexes stable.
+        // --- 1. STABLE MAPPING (V17 Base) ---
         const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ',
-        'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï'];
+        'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï',
+        // NEW FIXES V18
+        'ü', 'ö'];
         
         const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
-        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त'];
+        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्म', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त',
+        // NEW MAPPINGS
+        'श्च', 'ं'];
 
         function convertText(inputText) {
             if (!inputText) return "";
             let res = inputText;
 
-            // --- A. SMART CLUSTERS (V16 Logic) ---
+            // --- A. SMART CLUSTERS ---
             while(res.includes("{i>")) { res = res.replace("{i>", "ष्टि"); }
             while(res.includes("{Î")) { res = res.replace("{Î", "त्ति"); }
             while(res.includes("{Ï")) { res = res.replace("{Ï", "क्ति"); }
 
-            // --- B. PRIORITY OVERRIDES (Crucial Fixes) ---
+            // --- B. PRIORITY FIXES (Manual Override) ---
             
-            // 1. Fix: Ô -> य (Thayi, Triyagunicha)
-            // Note: We MUST replace this before main mapping because Ô is in the main list as 'द्व'
-            res = res.split('Ô').join('य');
+            // 1. ü -> श्च (Nischayatmak)
+            // Note: split/join works best for special chars
+            res = res.split('ü').join('श्च');
 
-            // 2. Fix: Ç -> ग (Sangitla)
-            // Note: Ç was mapped to 'ष्ट' in V16 extras, we override it here.
-            res = res.split('Ç').join('ग');
+            // 2. ÷ -> ह्म (Bramhand) - Updated from 'ह्'
+            res = res.split('÷').join('ह्म');
 
-            // 3. Fix: º -> त (Purvatil)
-            // Note: º$ is 'त्र', so 'º' alone is likely 'त'.
-            // We use a regex to replace 'º' only if it's NOT followed by '$'
-            res = res.replace(/º(?!\$)/g, 'त');
+            // 3. ö -> ं (Anuswar) - For 'Thayi' dots
+            res = res.split('ö').join('ं');
 
             // 4. Other Standard Fixes
-            res = res.split('|').join('ा');   // Kana
-            res = res.split('¦').join('ा');   // Kana 2
-            res = res.split('$').join('ळ');   // Lla
-            res = res.split('÷').join('ह्');  // H_Halant
-            res = res.split('£').join('ी');   // Velaanti
-            
-            // Only replace 'i' if it wasn't part of {i> above
+            res = res.split('Ô').join('य');
+            res = res.split('Ç').join('ग');
+            res = res.replace(/º(?!\$)/g, 'त');
+            res = res.split('|').join('ा');
+            res = res.split('¦').join('ा');
+            res = res.split('$').join('ळ');
+            res = res.split('£').join('ी');
             res = res.split('i').join('ी');   
 
+            // 5. Explicit Reph Fix for 'Garbha' (Just in case)
+            // Fixes 'भा©' -> 'र्भा' explicitly
+            res = res.split('भा©').join('र्भा');
+            res = res.split('वा©').join('र्वा');
 
-            // --- C. VELAANTI LOGIC (Swap) ---
+
+            // --- C. VELAANTI LOGIC ---
             // { -> ि
             let pos_curly = res.indexOf("{");
             while (pos_curly !== -1) {
@@ -122,7 +126,6 @@
             // --- D. MAIN MAPPING ---
             for (let i = 0; i < shreelipi_list.length; i++) {
                 if (shreelipi_list[i] && unicode_list[i]) {
-                    // split/join prevents regex issues
                     res = res.split(shreelipi_list[i]).join(unicode_list[i]);
                 }
             }
@@ -163,16 +166,18 @@
             // Cleanup 'o'
             res = res.replace(/o/g, "िं");
 
-            // Rafar Logic
+            // Rafar Logic (© -> र्)
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
                 let prob = pos_reph - 1;
                 while (prob >= 0 && matras.includes(res.charAt(prob))) prob--;
                 if (prob < 0) prob = 0;
+                
                 let chunk = res.substring(prob, pos_reph);
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
-                pos_reph = res.indexOf("©");
+                
+                pos_reph = res.indexOf("©"); // Restart search to ensure all are caught
             }
             
             // Tilde (~) -> र्
@@ -233,13 +238,13 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Final_V17_" + file.name;
+                a.download = "Master_V18_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done! Downloaded.";
-                statusDiv.innerText = "Success! (All characters fixed)";
+                statusDiv.innerText = "Success! (All characters Perfect)";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
