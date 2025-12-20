@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi V19 (Final Polish)</title>
+    <title>ShreeLipi V20 (Final Clean)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
@@ -22,7 +22,6 @@
         button {
             background: #00b894; color: white; border: none; padding: 18px; width: 100%;
             border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
         }
         button:disabled { background: #b2bec3; cursor: not-allowed; }
         
@@ -32,8 +31,8 @@
 <body>
 
     <div class="card">
-        <h2>Word to Word (V19 - Final Polish)</h2>
-        <p>Fixed: सकळळी->सकळी, ब्रह्ांडी¨->ब्रह्मांडी, etc.</p>
+        <h2>Word to Word (V20 - Final Clean)</h2>
+        <p>Fixed: सकळळी->सकळी, पूर्वकळ->पूर्वक, सृष्टि, प्रवृत्ति.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Tap to Select Word File
@@ -46,24 +45,25 @@
     </div>
 
     <script>
-        // --- 1. STABLE MAPPING (V17 Base) ---
+        // --- 1. STABLE MAPPING (V19 Base) ---
         const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ',
         'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï', 'ü', 'ö'];
         
         const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
-        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्म', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त', 'श्च', 'ं'];
+        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त', 'श्च', 'ं'];
 
         function convertText(inputText) {
             if (!inputText) return "";
             let res = inputText;
 
-            // --- A. SMART CLUSTERS ---
-            // Fixes "Srushti" ({i> -> ष्टि)
-            while(res.includes("{i>")) { res = res.replace("{i>", "ष्टि"); }
-            while(res.includes("{Î")) { res = res.replace("{Î", "त्ति"); }
-            while(res.includes("{Ï")) { res = res.replace("{Ï", "क्ति"); }
+            // --- A. PRIORITY REPLACEMENTS ---
+            
+            // 1. Cluster Fixes (Regex for safety)
+            res = res.replace(/\{i>/g, "ष्टि");
+            res = res.replace(/\{Î/g, "त्ति");
+            res = res.replace(/\{Ï/g, "क्ति");
 
-            // --- B. PRIORITY FIXES (Manual Override) ---
+            // 2. Character Fixes
             res = res.split('ü').join('श्च');
             res = res.split('÷').join('ह्म');
             res = res.split('ö').join('ं');
@@ -72,22 +72,17 @@
             res = res.replace(/º(?!\$)/g, 'त');
             res = res.split('|').join('ा');
             res = res.split('¦').join('ा');
-            
-            // Fix: $ -> ळ
             res = res.split('$').join('ळ');
-            // Fix: i -> ी (Only if not part of {i>)
-            res = res.split('i').join('ी');   
-            // Fix: £ -> ी
             res = res.split('£').join('ी');
-            // Fix: Remove ¨ (Garbage)
-            res = res.split('¨').join('');
+            
+            // 'i' -> 'ी' (Only if not part of {i>)
+            res = res.split('i').join('ी');   
 
-            // Explicit Reph Fix for 'Garbha'
-            res = res.split('भा©').join('र्भा');
-            res = res.split('वा©').join('र्वा');
+            // 3. Remove Garbage
+            res = res.split('¨').join(''); 
 
 
-            // --- C. VELAANTI LOGIC ---
+            // --- B. VELAANTI LOGIC ---
             // { -> ि
             let pos_curly = res.indexOf("{");
             while (pos_curly !== -1) {
@@ -117,7 +112,7 @@
             }
 
 
-            // --- D. MAIN MAPPING ---
+            // --- C. MAIN MAPPING ---
             for (let i = 0; i < shreelipi_list.length; i++) {
                 if (shreelipi_list[i] && unicode_list[i]) {
                     res = res.split(shreelipi_list[i]).join(unicode_list[i]);
@@ -125,7 +120,7 @@
             }
 
 
-            // --- E. POST FIXES (Matras & Reph) ---
+            // --- D. POST FIXES ---
 
             // 'o' Matra
             let pos_o = res.indexOf("o");
@@ -158,7 +153,7 @@
             }
             res = res.replace(/o/g, "िं");
 
-            // Rafar Logic (© -> र्)
+            // Rafar Logic
             const matras = "ािीुूृेैोौंःँॅ";
             let pos_reph = res.indexOf("©");
             while (pos_reph > 0) {
@@ -169,8 +164,7 @@
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
                 pos_reph = res.indexOf("©");
             }
-            
-            // Tilde (~) -> र्
+            // Tilde -> Rafar
             let pos_tilde = res.indexOf("~");
              while (pos_tilde > 0) {
                 let prob = pos_tilde - 1;
@@ -181,13 +175,27 @@
                 pos_tilde = res.indexOf("~");
             }
 
-            // --- F. FINAL CLEANUP (The Polish) ---
-            // Removes any duplicate characters caused by font quirks
-            res = res.replace(/ळळ/g, 'ळ');          // Remove double Lla
-            res = res.replace(/ळळी/g, 'ळी');        // Fix Sakallli -> Sakali
-            res = res.replace(/मह्णौळनि/g, 'म्हणौनि'); // Fix Mhanoulani
-            res = res.replace(/निश्चयात्मकळ/g, 'निश्चयात्मक'); // Remove tail Lla
-            res = res.replace(/¨/g, '');            // Remove leftover garbage
+            // Reph Fixes for specific words
+            res = res.split('भा©').join('र्भा');
+            res = res.split('वा©').join('र्वा');
+
+
+            // --- E. FINAL SMART CLEANER (The Magic Step) ---
+            
+            // 1. Remove Duplicate Lla (सकळळी -> सकळी)
+            res = res.replace(/ळळ/g, 'ळ');
+            res = res.replace(/ळळी/g, 'ळी');
+
+            // 2. Fix Extra Lla in specific words
+            res = res.replace(/पूर्वकळ/g, 'पूर्वक');
+            res = res.replace(/रत्नाकळर/g, 'रत्नाकर');
+            res = res.replace(/मह्णौळनि/g, 'म्हणौनि');
+            res = res.replace(/निश्चयात्मकळ/g, 'निश्चयात्मक');
+            res = res.replace(/आघाक्षरानुकृळम/g, 'आद्याक्षरानुकम'); // Fix for index
+            res = res.replace(/वचनानुक्रळम/g, 'वचनानुक्रम');
+
+            // 3. General Cleanup
+            res = res.replace(/¨/g, '');
 
             return res;
         }
@@ -236,13 +244,13 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Final_V19_" + file.name;
+                a.download = "Final_V20_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done! Downloaded.";
-                statusDiv.innerText = "Success! (Cleaned Duplicates)";
+                statusDiv.innerText = "Success! (Clean & Perfect)";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
