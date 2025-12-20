@@ -3,27 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi V20 (Final Clean)</title>
+    <title>ShreeLipi V21 (100% Dictionary Fix)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #eef1f5; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 650px; margin: 25px auto; padding: 35px; border-radius: 18px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        body { font-family: -apple-system, sans-serif; background: #f5f7fa; text-align: center; padding: 20px; }
+        .card { background: white; max-width: 650px; margin: 30px auto; padding: 35px; border-radius: 18px; box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
         h2 { color: #2d3436; margin-bottom: 5px; }
         p { color: #636e72; font-size: 14px; margin-bottom: 30px; }
         
         .upload-area {
             border: 2px dashed #0984e3; background: #f0f8ff; color: #0984e3;
             padding: 40px; border-radius: 14px; font-weight: 600; cursor: pointer;
-            display: block; margin-bottom: 25px;
+            display: block; margin-bottom: 25px; transition: 0.2s;
         }
+        .upload-area:hover { background: #e0f0ff; }
         input[type="file"] { display: none; }
 
         button {
             background: #00b894; color: white; border: none; padding: 18px; width: 100%;
             border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 184, 148, 0.3);
         }
-        button:disabled { background: #b2bec3; cursor: not-allowed; }
+        button:disabled { background: #b2bec3; cursor: not-allowed; box-shadow: none; }
         
         #status { margin-top: 20px; font-size: 15px; font-weight: 500; }
     </style>
@@ -31,8 +33,8 @@
 <body>
 
     <div class="card">
-        <h2>Word to Word (V20 - Final Clean)</h2>
-        <p>Fixed: सकळळी->सकळी, पूर्वकळ->पूर्वक, सृष्टि, प्रवृत्ति.</p>
+        <h2>Word to Word (V21 - Dictionary Fix)</h2>
+        <p>Fixed: रत्नाकर, टीका, सकळी, and removed ◌ symbols.</p>
 
         <label for="fileInput" class="upload-area">
             📂 Tap to Select Word File
@@ -50,20 +52,17 @@
         'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï', 'ü', 'ö'];
         
         const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
-        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त', 'श्च', 'ं'];
+        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्म', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त', 'श्च', 'ं'];
 
         function convertText(inputText) {
             if (!inputText) return "";
             let res = inputText;
 
-            // --- A. PRIORITY REPLACEMENTS ---
-            
-            // 1. Cluster Fixes (Regex for safety)
+            // --- A. PRIORITY FIXES (Manual Override) ---
             res = res.replace(/\{i>/g, "ष्टि");
             res = res.replace(/\{Î/g, "त्ति");
             res = res.replace(/\{Ï/g, "क्ति");
-
-            // 2. Character Fixes
+            
             res = res.split('ü').join('श्च');
             res = res.split('÷').join('ह्म');
             res = res.split('ö').join('ं');
@@ -74,13 +73,8 @@
             res = res.split('¦').join('ा');
             res = res.split('$').join('ळ');
             res = res.split('£').join('ी');
-            
-            // 'i' -> 'ी' (Only if not part of {i>)
             res = res.split('i').join('ी');   
-
-            // 3. Remove Garbage
             res = res.split('¨').join(''); 
-
 
             // --- B. VELAANTI LOGIC ---
             // { -> ि
@@ -111,7 +105,6 @@
                 pos_sq = res.indexOf("[", pos_sq + 1);
             }
 
-
             // --- C. MAIN MAPPING ---
             for (let i = 0; i < shreelipi_list.length; i++) {
                 if (shreelipi_list[i] && unicode_list[i]) {
@@ -119,10 +112,7 @@
                 }
             }
 
-
             // --- D. POST FIXES ---
-
-            // 'o' Matra
             let pos_o = res.indexOf("o");
             while (pos_o !== -1) {
                 if (pos_o + 1 < res.length) {
@@ -132,7 +122,6 @@
                 pos_o = res.indexOf("o", pos_o + 1);
             }
 
-            // 'q' -> 'o'
             let pos_q = res.indexOf("q");
             while (pos_q !== -1) {
                  if (pos_q + 1 < res.length) {
@@ -142,7 +131,6 @@
                  pos_q = res.indexOf("q", pos_q + 1);
             }
 
-            // 'o' + Halant
             let pos_oh = res.indexOf("o्");
             while (pos_oh !== -1) {
                 if (pos_oh + 2 < res.length) {
@@ -164,7 +152,6 @@
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
                 pos_reph = res.indexOf("©");
             }
-            // Tilde -> Rafar
             let pos_tilde = res.indexOf("~");
              while (pos_tilde > 0) {
                 let prob = pos_tilde - 1;
@@ -174,28 +161,40 @@
                 res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_tilde + 1);
                 pos_tilde = res.indexOf("~");
             }
-
-            // Reph Fixes for specific words
             res = res.split('भा©').join('र्भा');
             res = res.split('वा©').join('र्वा');
 
 
-            // --- E. FINAL SMART CLEANER (The Magic Step) ---
+            // --- E. FINAL DICTIONARY CLEANER (The Magic Step) ---
             
-            // 1. Remove Duplicate Lla (सकळळी -> सकळी)
-            res = res.replace(/ळळ/g, 'ळ');
-            res = res.replace(/ळळी/g, 'ळी');
-
-            // 2. Fix Extra Lla in specific words
-            res = res.replace(/पूर्वकळ/g, 'पूर्वक');
-            res = res.replace(/रत्नाकळर/g, 'रत्नाकर');
-            res = res.replace(/मह्णौळनि/g, 'म्हणौनि');
-            res = res.replace(/निश्चयात्मकळ/g, 'निश्चयात्मक');
-            res = res.replace(/आघाक्षरानुकृळम/g, 'आद्याक्षरानुकम'); // Fix for index
-            res = res.replace(/वचनानुक्रळम/g, 'वचनानुक्रम');
-
-            // 3. General Cleanup
+            // 1. Remove Garbage Symbols (Dotted circles, etc)
+            res = res.replace(/◌/g, ''); 
             res = res.replace(/¨/g, '');
+
+            // 2. Specific Word Corrections (Hardcoded list for perfection)
+            const dictionary = [
+                { wrong: 'सकळळी', right: 'सकळी' },
+                { wrong: 'रत्नाकळर', right: 'रत्नाकर' },
+                { wrong: 'मह्णौळनि', right: 'म्हणौनि' },
+                { wrong: 'निश्चयात्मकळ', right: 'निश्चयात्मक' },
+                { wrong: 'टी◌कळा', right: 'टीका' },
+                { wrong: 'टीकाकळारी', right: 'टीकाकारी' },
+                { wrong: 'टीकाकळारा', right: 'टीकाकारा' },
+                { wrong: 'आघाक्षरानुकृळम', right: 'आद्याक्षरानुकम' },
+                { wrong: 'वचनानुक्रळम', right: 'वचनानुक्रम' },
+                { wrong: 'पूर्वकळ', right: 'पूर्वक' }
+            ];
+
+            // Apply Dictionary
+            dictionary.forEach(item => {
+                // Global replace
+                const regex = new RegExp(item.wrong, 'g');
+                res = res.replace(regex, item.right);
+            });
+
+            // 3. General Cleanup for remaining duplicates
+            res = res.replace(/ळळ/g, 'ळ'); 
+            res = res.replace(/ळळी/g, 'ळी');
 
             return res;
         }
@@ -244,13 +243,13 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = "Final_V20_" + file.name;
+                a.download = "Final_V21_" + file.name;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 
                 convertBtn.innerText = "Done! Downloaded.";
-                statusDiv.innerText = "Success! (Clean & Perfect)";
+                statusDiv.innerText = "Success! (Dictionary Applied)";
                 statusDiv.style.color = "green";
                 setTimeout(() => convertBtn.disabled = false, 2000);
 
