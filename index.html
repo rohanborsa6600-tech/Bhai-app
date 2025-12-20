@@ -7,7 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; text-align: center; padding: 20px; }
+        body { font-family: -apple-system, sans-serif; background: #f2f4f8; text-align: center; padding: 20px; }
         .card { background: white; max-width: 650px; margin: 30px auto; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         h2 { color: #222; margin-bottom: 10px; }
         p { color: #666; font-size: 15px; margin-bottom: 30px; }
@@ -28,7 +28,6 @@
         button:disabled { background: #d1d1d6; cursor: not-allowed; box-shadow: none; }
         
         #status { margin-top: 20px; font-size: 15px; font-weight: 500; }
-        #fileName { margin-bottom: 20px; color: #444; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -38,23 +37,23 @@
         <p>Fixed: ÷ -> ह्, £ -> ी, $ -> ळ, and more.</p>
 
         <label for="fileInput" class="upload-area">
-            📂 Tap to Select Word File
+            📂 Select Word File (.docx)
         </label>
         <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
         
-        <div id="fileName"></div>
+        <div id="fileName" style="margin-bottom: 15px; color: #555;"></div>
         <button id="convertBtn" disabled>Convert Now</button>
         <div id="status"></div>
     </div>
 
     <script>
         // --- 1. STABLE MAPPING ---
-        // V10 list (Correct Base) + New Fixes for ÷ and £
+        // V10 list (Correct Base) - We keep this intact to avoid shifting
         const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ',
-        'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£'];
+        'G', 'L', 'v', 'x', '%', '=', '(', ')'];
         
         const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 
-        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्', 'ी'];
+        'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')'];
 
         function convertText(inputText) {
             if (!inputText) return "";
@@ -70,6 +69,13 @@
 
             // 3. Fix: i -> ी (Velaanti 2)
             res = res.split('i').join('ी');
+            
+            // 4. Fix: ÷ -> ह् (New for V11)
+            res = res.split('÷').join('ह्');
+
+            // 5. Fix: £ -> ी (New for V11)
+            res = res.split('£').join('ी');
+
 
             // --- B. VELAANTI SWAP LOGIC ---
 
