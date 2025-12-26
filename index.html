@@ -1,261 +1,154 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShreeLipi Pro V2 (Perfect 2-way)</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
+    <title>Marathi Word Extractor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #eef1f5; text-align: center; padding: 20px; }
-        .card { background: white; max-width: 700px; margin: 25px auto; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h2 { color: #2d3436; margin-bottom: 5px; }
-        p { color: #636e72; font-size: 14px; margin-bottom: 25px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f2f2f7;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 { text-align: center; color: #007aff; }
         
-        .mode-selector {
-            display: flex; justify-content: center; gap: 15px; margin-bottom: 25px;
-            background: #f1f2f6; padding: 8px; border-radius: 12px;
+        .upload-box {
+            border: 2px dashed #007aff;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            cursor: pointer;
         }
-        .radio-label {
-            padding: 12px 24px; cursor: pointer; border-radius: 8px; font-weight: 600; color: #555; transition: 0.2s;
-        }
-        input[type="radio"] { display: none; }
-        input[type="radio"]:checked + .radio-label {
-            background: #0984e3; color: white; box-shadow: 0 4px 10px rgba(9, 132, 227, 0.3);
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            resize: vertical;
         }
 
-        .upload-area {
-            border: 2px dashed #0984e3; background: #f0f8ff; color: #0984e3;
-            padding: 40px; border-radius: 14px; font-weight: 600; cursor: pointer;
-            display: block; margin-bottom: 20px;
-        }
-        textarea {
-            width: 100%; height: 100px; padding: 15px; border: 1px solid #dfe6e9; border-radius: 12px;
-            font-size: 16px; margin-bottom: 20px; font-family: 'Arial Unicode MS', sans-serif;
-        }
         button {
-            background: #00b894; color: white; border: none; padding: 18px; width: 100%;
-            border-radius: 12px; font-size: 18px; font-weight: 600; cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
         }
-        button:disabled { background: #b2bec3; cursor: not-allowed; }
-        #status { margin-top: 20px; font-size: 15px; font-weight: 500; }
+        button:active { background-color: #005bb5; }
+        
+        .status {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            text-align: right;
+        }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>ShreeLipi Pro V2 (2-in-1)</h2>
-        <p>Advanced Unicode ⟷ ShreeLipi Converter</p>
-
-        <div class="mode-selector">
-            <input type="radio" id="modeSL" name="mode" value="sl2uni" checked>
-            <label for="modeSL" class="radio-label">ShreeLipi ➝ Unicode</label>
-
-            <input type="radio" id="modeUni" name="mode" value="uni2sl">
-            <label for="modeUni" class="radio-label">Unicode ➝ ShreeLipi</label>
-        </div>
-
-        <textarea id="inputText" placeholder="Paste text here to test..."></textarea>
-
-        <label for="fileInput" class="upload-area">
-            📂 Tap to Select Word File (.docx)
-        </label>
-        <input type="file" id="fileInput" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
-        
-        <div id="fileName" style="margin-bottom: 15px; color: #555;"></div>
-        <button id="convertBtn">Convert Now</button>
-        <div id="status"></div>
+<div class="container">
+    <h2>मराठी शब्द वेगळे करा</h2>
+    
+    <div class="upload-box">
+        <label for="fileInput">येथे .docx फाईल निवडा</label><br><br>
+        <input type="file" id="fileInput" accept=".docx" onchange="processFile()" />
     </div>
 
-    <script>
-        // --- DATASETS (V21 Basis) ---
-        const shreelipi_list = ['…','b','ÿ','Ä','@','Q´','u','ª','}','[','p','H','³','I','»','J','½','K','M','À','N','µO','O','µÁ','Á','P','Q','R','¶S','S','¶T','T','U','Ê','W','Ï','V','Ë','Y','Ü','X','Z','Ý','’','â','n','ß','^','ä','~','ã','‘','å','¶','a','c','ë','d','ì','e','û','í','f','î','g','ñ','h','j','ú','k','Ô','Û','Ú','à','Þ','Q­','º$','Ì','Ð','Õ','l','Îm','¸','„','ˆ','œ','Å','Am¡','Amo','Am|','Am','A','B©','B','C','D','Eo','E','F','m°','mo','m|','o','|','m¡','m¢','¡','¢','m','r','s','t','w','þ','y','§','±','•','¥','²','Ñ','«','é','ê','&','$','>','µ', 'G', 'L', 'v', 'x', '%', '=', '(', ')', '÷', '£', '¾', '¨', 'Æ', 'Ç', 'Î', 'Ï', 'ü', 'ö', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        
-        const unicode_list = ['ः',"ल","ू","ञ्",'ऽ','ट्र','©','©ं','{©','{','{',"क",'क्',"ख",'ख्',"ग",'ग्',"घ",'च','च्','छ','ज़','ज','ज़्','ज्','झ',"ट","ठ",'ड़',"ड",'ढ़','ढ',"ण",'ण्',"थ",'थ्',"त",'त्',"ध",'ध्',"द","न",'न्',"फ",'फ्',"प",'प्',"भ",'भ्',"ब",'ब्',"म",'म्',"य","र","ल",'ल्',"व",'व्',"श",'श्','श्',"ष",'ष्',"स",'स्',"ह",'क्ष','क्ष्','ज्ञ','द्द','द्व','द्य','प्र','न्न','ट्र','क्त','त्र','द्र','द्ध','श्र','त्त','क्क','ल्ल','ह्व','श्व','ट्ट','औ','ओ','ओं','आ','अ','ई','इ','उ','ऊ','ऐ','ए','ऋ','ॉ',"ो","ों","े","ें","ौ","ौं","ै",'ैं',"ा","ी","ी","ीं","ु",'ु',"ू",'ं','ँ','ः','ृ','्','दृ','्र','रु','रू','।','।','','', 'ज', 'ध', 'ै', 'ॅ', 'ॄ', '.', '(', ')', 'ह्म', 'ी', 'ग्न', '्य', 'र्‍', 'ष्ट', 'त्त', 'क्त', 'श्च', 'ं', '०', '१', '२', '३', '४', '५', '६', '७', '८', '९'];
+    <div class="status" id="statusText">शब्द संख्या: 0</div>
+    <textarea id="outputList" placeholder="इथे शब्दांची यादी तयार होईल..." readonly></textarea>
+    
+    <button onclick="copyToList()">📋 Copy List</button>
+</div>
 
-        // Dictionary for SL -> Uni
-        const dictionary = [
-            { wrong: 'सकळळी', right: 'सकळी' }, { wrong: 'रत्नाकळर', right: 'रत्नाकर' },
-            { wrong: 'मह्णौळनि', right: 'म्हणौनि' }, { wrong: 'निश्चयात्मकळ', right: 'निश्चयात्मक' },
-            { wrong: 'टी◌कळा', right: 'टीका' }, { wrong: 'टीकाकळारी', right: 'टीकाकारी' },
-            { wrong: 'पूर्वकळ', right: 'पूर्वक' }
-        ];
-
-        // Prepare Reverse Map (Uni -> SL)
-        // Ensure critical missing characters are mapped manually
-        let reverseMap = [];
-        // Add specific overrides first
-        reverseMap.push({ u: 'ृ', s: '•' }); // Rukara (V22 Fix)
-        reverseMap.push({ u: 'ि', s: '{' }); // Velanti (Placeholder)
-        reverseMap.push({ u: 'ं', s: 'ö' }); // Anuswar
-        reverseMap.push({ u: 'त्र', s: 'º$' }); // Tra
-        reverseMap.push({ u: 'प्र', s: 'Ú' }); // Pra
-        reverseMap.push({ u: 'द्य', s: 'Û' }); // Dya
-        reverseMap.push({ u: 'श्च', s: 'ü' }); // Sch
-        
-        // Add standard list
-        for(let i=0; i<unicode_list.length; i++) {
-            if(unicode_list[i] && shreelipi_list[i]) {
-                reverseMap.push({ u: unicode_list[i], s: shreelipi_list[i] });
-            }
-        }
-        reverseMap.sort((a, b) => b.u.length - a.u.length);
-
-        // --- CONVERSION: SL -> Unicode ---
-        function convertSLtoUni(text) {
-            let res = text;
-            res = res.replace(/\{i>/g, "ष्टि"); res = res.replace(/\{Î/g, "त्ति"); res = res.replace(/\{Ï/g, "क्ति");
-            res = res.split('ü').join('श्च'); res = res.split('÷').join('ह्म'); res = res.split('ö').join('ं');
-            res = res.split('Ô').join('य'); res = res.split('Ç').join('ग'); res = res.replace(/º(?!\$)/g, 'त');
-            res = res.split('|').join('ा'); res = res.split('¦').join('ा'); res = res.split('$').join('ळ');
-            res = res.split('£').join('ी'); res = res.split('i').join('ी'); res = res.split('¨').join(''); 
-            
-            // Velanti Swap
-            let pos_curly = res.indexOf("{");
-            while (pos_curly !== -1) {
-                if (pos_curly + 1 < res.length) {
-                    let next = res.charAt(pos_curly + 1);
-                    if (next !== ' ' && next !== '©') res = res.replace("{" + next, next + "ि");
-                }
-                pos_curly = res.indexOf("{", pos_curly + 1);
-            }
-            let pos_grt = res.indexOf(">");
-            while (pos_grt !== -1) {
-                if (pos_grt + 1 < res.length) {
-                    let next = res.charAt(pos_grt + 1);
-                    if (next !== ' ' && next !== '©') res = res.replace(">" + next, next + "ि");
-                }
-                pos_grt = res.indexOf(">", pos_grt + 1);
-            }
-
-            // Main Map
-            for (let i = 0; i < shreelipi_list.length; i++) {
-                if (shreelipi_list[i] && unicode_list[i]) res = res.split(shreelipi_list[i]).join(unicode_list[i]);
-            }
-
-            // Post Fixes
-            res = res.replace(/o/g, "िं"); // Matra fix
-            res = res.split('भा©').join('र्भा');
-            res = res.split('वा©').join('र्वा');
-
-            // Rafar Logic
-            const matras = "ािीुूृेैोौंःँॅ";
-            let pos_reph = res.indexOf("©");
-            while (pos_reph > 0) {
-                let prob = pos_reph - 1;
-                while (prob >= 0 && matras.includes(res.charAt(prob))) prob--;
-                if (prob < 0) prob = 0;
-                let chunk = res.substring(prob, pos_reph);
-                res = res.substring(0, prob) + "र्" + chunk + res.substring(pos_reph + 1);
-                pos_reph = res.indexOf("©");
-            }
-
-            // Dictionary Clean
-            res = res.replace(/◌/g, ''); 
-            dictionary.forEach(item => { res = res.replace(new RegExp(item.wrong, 'g'), item.right); });
-            res = res.replace(/ळळ/g, 'ळ'); res = res.replace(/ळळी/g, 'ळी');
-
-            return res;
-        }
-
-        // --- CONVERSION: Unicode -> SL (Improved) ---
-        function convertUnitoSL(text) {
-            let res = text;
-            
-            // 1. Reph Logic (Move 'र्' to end of cluster)
-            // Finds 'र्' followed by a Consonant Cluster (Consonant + Halant + Consonant...)
-            // Matches: \u0930\u094d (Reph) followed by ONE or MORE Consonants/Halants + Optional Matras
-            // Example: र् + भ + ा = भ + ा + ©
-            res = res.replace(/\u0930\u094d((?:[\u0915-\u0939]\u094d)*[\u0915-\u0939][\u093e-\u094c]?)/g, "$1\u00a9");
-
-            // 2. Velanti Logic (Swap Position)
-            // Finds (Consonant Cluster) + 'ि'
-            // Moves 'ि' to START of cluster and changes to '{'
-            // Example: क + ि -> {क | प + ् + र + ि -> {प्र
-            res = res.replace(/((?:[\u0915-\u0939]\u094d)*[\u0915-\u0939])\u093f/g, "{$1");
-
-            // 3. Main Mapping
-            for (let i = 0; i < reverseMap.length; i++) {
-                if (res.includes(reverseMap[i].u)) {
-                    res = res.split(reverseMap[i].u).join(reverseMap[i].s);
-                }
-            }
-
-            // 4. Force Kana
-            res = res.split('ा').join('|');
-
-            return res;
-        }
-
-        // --- HANDLERS ---
+<script>
+    function processFile() {
         const fileInput = document.getElementById('fileInput');
-        const convertBtn = document.getElementById('convertBtn');
-        const fileNameDiv = document.getElementById('fileName');
-        const statusDiv = document.getElementById('status');
-        const inputTextArea = document.getElementById('inputText');
-        const radios = document.getElementsByName('mode');
+        const outputArea = document.getElementById('outputList');
+        const statusText = document.getElementById('statusText');
 
-        fileInput.addEventListener('change', () => {
-            if(fileInput.files.length > 0) fileNameDiv.innerText = "Selected: " + fileInput.files[0].name;
+        if (fileInput.files.length === 0) {
+            alert("कृपया फाईल निवडा.");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            const arrayBuffer = event.target.result;
+
+            // Using Mammoth.js to extract raw text from docx
+            mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                .then(function(result) {
+                    const text = result.value; // The raw text
+                    extractWords(text);
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Error reading file: " + error.message);
+                });
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    function extractWords(text) {
+        // Regex to find Marathi words only
+        const marathiRegex = /[\u0900-\u097F]+/g;
+        const matches = text.match(marathiRegex);
+
+        if (!matches) {
+            document.getElementById('outputList').value = "या फाईलमध्ये मराठी शब्द सापडले नाहीत.";
+            return;
+        }
+
+        // Remove duplicates and Sort
+        const uniqueWords = [...new Set(matches)].sort();
+        
+        // Join with new line
+        const resultString = uniqueWords.join('\n');
+
+        // Display Result
+        document.getElementById('outputList').value = resultString;
+        document.getElementById('statusText').innerText = "शब्द संख्या: " + uniqueWords.length;
+    }
+
+    function copyToList() {
+        const outputArea = document.getElementById('outputList');
+        if (!outputArea.value) {
+            alert("कॉपी करण्यासाठी काहीही नाही!");
+            return;
+        }
+        
+        outputArea.select();
+        outputArea.setSelectionRange(0, 99999); // For mobile devices
+
+        navigator.clipboard.writeText(outputArea.value).then(() => {
+            alert("यादी कॉपी झाली!");
+        }).catch(err => {
+            alert("कॉपी करताना एरर आली: " + err);
         });
+    }
+</script>
 
-        convertBtn.addEventListener('click', async () => {
-            const mode = Array.from(radios).find(r => r.checked).value;
-            const textVal = inputTextArea.value;
-
-            // Text Mode
-            if(textVal) {
-                inputTextArea.value = (mode === 'sl2uni') ? convertSLtoUni(textVal) : convertUnitoSL(textVal);
-                statusDiv.innerText = "Text Converted!";
-                statusDiv.style.color = "#00b894";
-                return;
-            }
-
-            // File Mode
-            if(fileInput.files.length === 0) { alert("Select file first."); return; }
-            convertBtn.disabled = true; convertBtn.innerText = "Processing...";
-            
-            try {
-                if (typeof JSZip === 'undefined') throw new Error("Internet Needed.");
-                const file = fileInput.files[0];
-                const arrayBuffer = await file.arrayBuffer();
-                const zip = await JSZip.loadAsync(arrayBuffer);
-                const docXml = await zip.file("word/document.xml").async("string");
-                const parser = new DOMParser();
-                const xmlDoc = parser.parseFromString(docXml, "text/xml");
-                const textNodes = xmlDoc.getElementsByTagName("w:t");
-
-                for (let i = 0; i < textNodes.length; i++) {
-                    let original = textNodes[i].textContent;
-                    if (original && original.trim().length > 0) {
-                        textNodes[i].textContent = (mode === 'sl2uni') ? convertSLtoUni(original) : convertUnitoSL(original);
-                    }
-                }
-
-                const serializer = new XMLSerializer();
-                const newDocXml = serializer.serializeToString(xmlDoc);
-                zip.file("word/document.xml", newDocXml);
-                const blob = await zip.generateAsync({type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"});
-                
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                let prefix = (mode === 'sl2uni') ? "Uni_" : "SL_";
-                a.download = prefix + file.name;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                
-                convertBtn.innerText = "Done!";
-                statusDiv.innerText = "Success!";
-                statusDiv.style.color = "green";
-                setTimeout(() => { convertBtn.disabled = false; convertBtn.innerText = "Convert Now"; }, 2000);
-
-            } catch (err) {
-                alert("Error: " + err.message);
-                convertBtn.innerText = "Try Again";
-                convertBtn.disabled = false;
-            }
-        });
-    </script>
 </body>
 </html>
